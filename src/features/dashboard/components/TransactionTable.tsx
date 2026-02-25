@@ -1,102 +1,78 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import {
 	Search,
 	Filter,
-	Download,
+	RefreshCw,
 	ChevronLeft,
 	ChevronRight,
+	Loader2,
+	Sparkles
 } from 'lucide-react';
-import type { Transaction, TransactionStatus } from '../types';
+import type { Transaction } from '../../../api';
 import { TransactionDetailModal } from './TransactionDetailModal';
 
 interface TransactionTableProps {
 	transactions: Transaction[];
-	onStatusChange: (txnId: string, status: TransactionStatus) => void;
-}
-
-const ITEMS_PER_PAGE = 10;
-
-const STATUS_STYLES: Record<TransactionStatus, string> = {
-	PENDING: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30',
-	APPROVED: 'bg-green-500/10 text-green-400 border-green-500/30',
-	FLAGGED: 'bg-orange-500/10 text-orange-400 border-orange-500/30',
-	BLOCKED: 'bg-[#ff4d4d]/10 text-[#ff4d4d] border-[#ff4d4d]/30',
-};
-
-const STATUS_ROW_BG: Record<TransactionStatus, string> = {
-	PENDING: 'bg-yellow-500/[0.03]',
-	APPROVED: '',
-	FLAGGED: 'bg-orange-500/[0.04]',
-	BLOCKED: 'bg-[#ff4d4d]/[0.04]',
-};
-
-function formatTimestamp(iso: string): string {
-	const d = new Date(iso);
-	const day = d.getDate().toString().padStart(2, '0');
-	const months = [
-		'Jan',
-		'Feb',
-		'Mar',
-		'Apr',
-		'May',
-		'Jun',
-		'Jul',
-		'Aug',
-		'Sep',
-		'Oct',
-		'Nov',
-		'Dec',
-	];
-	const month = months[d.getMonth()];
-	const year = d.getFullYear().toString().slice(-2);
-	const hours = d.getHours().toString().padStart(2, '0');
-	const mins = d.getMinutes().toString().padStart(2, '0');
-	return `${day} ${month} '${year}, ${hours}:${mins}`;
+	loading: boolean;
+	page: number;
+	pages: number;
+	total: number;
+	onPageChange: (page: number) => void;
+	onReview: (txnId: string, status: string) => void;
+	onRefresh: () => void;
+	searchQuery: string;
+	onSearchChange: (q: string) => void;
+	fraudType: string;
+	onFraudTypeChange: (f: string) => void;
+	onInvestigate: (txnId: string) => void;
 }
 
 function getRiskBadge(score: number): string {
 	if (score >= 0.7) return 'bg-red-500/10 text-red-400 border-red-500/30';
-	if (score >= 0.4)
-		return 'bg-orange-500/10 text-orange-400 border-orange-500/30';
+	if (score >= 0.4) return 'bg-orange-500/10 text-orange-400 border-orange-500/30';
 	return 'bg-green-500/10 text-green-400 border-green-500/30';
+}
+
+function getStatusBadge(txn: Transaction): { label: string; style: string } {
+	if (txn.review_status === 'confirmed_fraud') return { label: '⛔ CONFIRMED', style: 'bg-red-500/10 text-red-400 border-red-500/30' };
+	if (txn.review_status === 'false_positive') return { label: '✅ CLEARED', style: 'bg-green-500/10 text-green-400 border-green-500/30' };
+	if (txn.is_flagged) return { label: '⚠ FLAGGED', style: 'bg-orange-500/10 text-orange-400 border-orange-500/30' };
+	return { label: 'NORMAL', style: 'bg-gray-500/5 text-gray-500 border-gray-500/20' };
+}
+
+function getFraudTypeBadge(type: string | null): string {
+	if (!type) return '';
+	const colors: Record<string, string> = {
+		velocity_attack: 'text-purple-400',
+		card_testing: 'text-cyan-400',
+		collusion_ring: 'text-pink-400',
+		geo_anomaly: 'text-amber-400',
+		amount_anomaly: 'text-red-400',
+	};
+	return colors[type] || 'text-gray-400';
+}
+
+function formatFraudType(type: string | null): string {
+	if (!type) return '—';
+	return type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 }
 
 export const TransactionTable: React.FC<TransactionTableProps> = ({
 	transactions,
-	onStatusChange,
+	loading,
+	page,
+	pages,
+	total,
+	searchQuery,
+	onSearchChange,
+	fraudType,
+	onFraudTypeChange,
+	onPageChange,
+	onReview,
+	onRefresh,
+	onInvestigate,
 }) => {
-	const [currentPage, setCurrentPage] = useState(1);
-	const [searchQuery, setSearchQuery] = useState('');
 	const [selectedTxn, setSelectedTxn] = useState<Transaction | null>(null);
-
-	// Filter transactions by search
-	const filtered = useMemo(() => {
-		if (!searchQuery.trim()) return transactions;
-		const q = searchQuery.toLowerCase();
-		return transactions.filter(
-			(t) =>
-				t.txnId.toLowerCase().includes(q) ||
-				t.userId.toLowerCase().includes(q) ||
-				t.merchantId.toLowerCase().includes(q) ||
-				t.merchantCity.toLowerCase().includes(q) ||
-				t.issuerId.toLowerCase().includes(q),
-		);
-	}, [transactions, searchQuery]);
-
-	const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
-	const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-	const pageData = filtered.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-
-	// Reset to page 1 when search changes
-	const handleSearch = (value: string) => {
-		setSearchQuery(value);
-		setCurrentPage(1);
-	};
-
-	// Keep selectedTxn in sync with latest data (for status changes)
-	const activeSelectedTxn = selectedTxn
-		? transactions.find((t) => t.txnId === selectedTxn.txnId) || null
-		: null;
 
 	return (
 		<>
@@ -108,152 +84,203 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
 						<input
 							type='text'
 							value={searchQuery}
-							onChange={(e) => handleSearch(e.target.value)}
-							placeholder='Search by Transaction ID, User, Merchant...'
+							onChange={(e) => onSearchChange(e.target.value)}
+							placeholder='Search by ID, payer, merchant, city, fraud type...'
 							className='w-full bg-[#121212] border border-white/5 rounded-full py-3 pl-12 pr-6 text-sm text-gray-300 focus:outline-none focus:border-orange-500/50 transition-colors'
 						/>
 					</div>
 					<div className='flex items-center gap-3'>
-						<button className='flex items-center gap-2 px-5 py-2.5 bg-[#121212] border border-white/5 rounded-full text-sm font-medium text-gray-300 hover:bg-white/5 transition-colors'>
-							<Filter className='size-4' />
-							Filter
-						</button>
-						<button className='flex items-center gap-2 px-5 py-2.5 bg-[#121212] border border-white/5 rounded-full text-sm font-medium text-gray-300 hover:bg-white/5 transition-colors'>
-							<Download className='size-4' />
-							Export
+						<div className='relative flex items-center bg-[#121212] border border-white/5 rounded-full px-4 h-11 transition-colors hover:border-orange-500/30 focus-within:border-orange-500/50'>
+							<Filter className='size-4 text-gray-500 mr-2' />
+							<select
+								value={fraudType}
+								onChange={(e) => onFraudTypeChange(e.target.value)}
+								className='bg-transparent text-sm text-gray-300 outline-none appearance-none pr-6 cursor-pointer'
+							>
+								<option className='bg-[#1a1a1a] text-white' value=''>All Types</option>
+								<option className='bg-[#1a1a1a] text-white' value='velocity_attack'>Velocity Attack</option>
+								<option className='bg-[#1a1a1a] text-white' value='card_testing'>Card Testing</option>
+								<option className='bg-[#1a1a1a] text-white' value='collusion_ring'>Collusion Ring</option>
+								<option className='bg-[#1a1a1a] text-white' value='geo_anomaly'>Geo Anomaly</option>
+								<option className='bg-[#1a1a1a] text-white' value='amount_anomaly'>Amount Anomaly</option>
+							</select>
+						</div>
+						<button
+							onClick={onRefresh}
+							disabled={loading}
+							className='flex items-center gap-2 px-5 py-2.5 bg-[#121212] border border-white/5 rounded-full text-sm font-medium text-gray-300 hover:bg-white/5 transition-colors'
+						>
+							{loading ? <Loader2 className='size-4 animate-spin' /> : <RefreshCw className='size-4' />}
+							Refresh
 						</button>
 					</div>
 				</div>
 
 				{/* Table */}
 				<div className='overflow-x-auto'>
-					<table className='w-full border-collapse'>
-						<thead>
-							<tr className='text-left border-b border-white/10'>
-								<th className='pb-4 pt-2 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider'>
-									Transaction ID
-								</th>
-								<th className='pb-4 pt-2 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider'>
-									Timestamp
-								</th>
-								<th className='pb-4 pt-2 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider'>
-									User ID
-								</th>
-								<th className='pb-4 pt-2 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider'>
-									Merchant
-								</th>
-								<th className='pb-4 pt-2 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider'>
-									Amount
-								</th>
-								<th className='pb-4 pt-2 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider'>
-									Risk Score
-								</th>
-								<th className='pb-4 pt-2 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider'>
-									Status
-								</th>
-							</tr>
-						</thead>
-						<tbody className='divide-y divide-white/5'>
-							{pageData.map((txn) => (
-								<tr
-									key={txn.txnId}
-									onClick={() => setSelectedTxn(txn)}
-									className={`hover:bg-white/[0.04] transition-colors cursor-pointer ${STATUS_ROW_BG[txn.status]}`}
-								>
-									<td className='py-4 px-4 text-sm text-gray-300 font-mono'>
-										{txn.txnId}
-									</td>
-									<td className='py-4 px-4 text-sm text-gray-400'>
-										{formatTimestamp(txn.timestamp)}
-									</td>
-									<td className='py-4 px-4 text-sm text-gray-300 font-mono'>
-										{txn.userId}
-									</td>
-									<td className='py-4 px-4 text-sm text-gray-400'>
-										<span className='font-mono text-gray-300'>
-											{txn.merchantId}
-										</span>
-										<span className='text-gray-600 mx-1'>·</span>
-										<span>{txn.merchantCity}</span>
-									</td>
-									<td className='py-4 px-4 text-sm font-semibold text-gray-200'>
-										IDR {txn.amountIdr.toLocaleString('id-ID')}
-									</td>
-									<td className='py-4 px-4 text-sm'>
-										<span
-											className={`inline-flex items-center px-3 py-1.5 rounded-lg text-[10px] font-bold border ${getRiskBadge(txn.merchantRiskScore)}`}
-										>
-											{(txn.merchantRiskScore * 100).toFixed(1)}%
-										</span>
-									</td>
-									<td className='py-4 px-4 text-sm'>
-										<span
-											className={`inline-flex items-center px-3 py-1.5 rounded-lg text-[10px] font-bold border ${STATUS_STYLES[txn.status]}`}
-										>
-											{txn.status}
-										</span>
-									</td>
+					{loading && transactions.length === 0 ? (
+						<div className='flex items-center justify-center py-20'>
+							<Loader2 className='size-8 animate-spin text-orange-500' />
+							<span className='ml-3 text-gray-400'>Loading transactions...</span>
+						</div>
+					) : transactions.length === 0 ? (
+						<div className='flex flex-col items-center justify-center py-20 text-gray-500'>
+							<p className='text-lg mb-2'>No transactions yet</p>
+							<p className='text-sm'>Start the Data Filler or run an Attack Simulation to generate data</p>
+						</div>
+					) : (
+						<table className='w-full border-collapse'>
+							<thead>
+								<tr className='text-left border-b border-white/10'>
+									<th className='pb-4 pt-2 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider'>
+										Txn ID
+									</th>
+									<th className='pb-4 pt-2 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider'>
+										Payer
+									</th>
+									<th className='pb-4 pt-2 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider'>
+										Merchant · City
+									</th>
+									<th className='pb-4 pt-2 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider'>
+										Amount
+									</th>
+									<th className='pb-4 pt-2 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider'>
+										Risk Score
+									</th>
+									<th className='pb-4 pt-2 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider'>
+										Fraud Type
+									</th>
+									<th className='pb-4 pt-2 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider'>
+										Status
+									</th>
+									<th className='pb-4 pt-2 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider text-right'>
+										Actions
+									</th>
 								</tr>
-							))}
-						</tbody>
-					</table>
+							</thead>
+							<tbody className='divide-y divide-white/5'>
+								{transactions.map((txn) => {
+									const status = getStatusBadge(txn);
+									return (
+										<tr
+											key={txn.txn_id}
+											onClick={() => setSelectedTxn(txn)}
+											className={`hover:bg-white/[0.04] transition-colors cursor-pointer ${txn.is_flagged ? 'bg-orange-500/[0.03]' : ''
+												}`}
+										>
+											<td className='py-4 px-4 text-sm text-gray-300 font-mono'>
+												{txn.txn_id}
+											</td>
+											<td className='py-4 px-4 text-sm text-gray-400 font-mono'>
+												{txn.payer.substring(0, 8)}...
+											</td>
+											<td className='py-4 px-4 text-sm text-gray-400'>
+												<span className='text-gray-300'>{txn.merchant}</span>
+												<span className='text-gray-600 mx-1'>·</span>
+												<span>{txn.city}</span>
+											</td>
+											<td className='py-4 px-4 text-sm font-semibold text-gray-200'>
+												IDR {txn.amount_idr.toLocaleString('id-ID')}
+											</td>
+											<td className='py-4 px-4 text-sm'>
+												<span
+													className={`inline-flex items-center px-3 py-1.5 rounded-lg text-[10px] font-bold border ${getRiskBadge(txn.risk_score)}`}
+												>
+													{(txn.risk_score * 100).toFixed(1)}%
+												</span>
+											</td>
+											<td className='py-4 px-4 text-sm'>
+												<span className={`text-xs font-medium ${getFraudTypeBadge(txn.fraud_type)}`}>
+													{formatFraudType(txn.fraud_type)}
+												</span>
+											</td>
+											<td className='py-4 px-4 text-sm'>
+												<span
+													className={`inline-flex items-center px-3 py-1.5 rounded-lg text-[10px] font-bold border ${status.style}`}
+												>
+													{status.label}
+												</span>
+											</td>
+											<td className='py-4 px-4 text-sm text-right'>
+												{txn.is_flagged && (
+													<button
+														onClick={(e) => {
+															e.stopPropagation();
+															onInvestigate(txn.txn_id);
+														}}
+														className='p-2 rounded-lg bg-orange-500/10 text-orange-400 border border-orange-500/30 hover:bg-orange-500/20 hover:scale-105 transition-all text-xs flex items-center gap-1.5 ml-auto group'
+														title='Investigate with AI'
+													>
+														<Sparkles className='size-3.5 group-hover:animate-pulse' />
+														<span className='hidden xl:inline'>Investigate</span>
+													</button>
+												)}
+											</td>
+										</tr>
+									);
+								})}
+							</tbody>
+						</table>
+					)}
 				</div>
 
 				{/* Pagination */}
-				<div className='flex items-center justify-between mt-6 pt-4 border-t border-white/5'>
-					<p className='text-xs text-gray-500'>
-						Showing{' '}
-						<span className='text-gray-300 font-medium'>
-							{startIndex + 1}–
-							{Math.min(startIndex + ITEMS_PER_PAGE, filtered.length)}
-						</span>{' '}
-						of{' '}
-						<span className='text-gray-300 font-medium'>{filtered.length}</span>{' '}
-						transactions
-					</p>
+				{pages > 0 && (
+					<div className='flex items-center justify-between mt-6 pt-4 border-t border-white/5'>
+						<p className='text-xs text-gray-500'>
+							Page <span className='text-gray-300 font-medium'>{page}</span> of{' '}
+							<span className='text-gray-300 font-medium'>{pages}</span>
+							{' · '}
+							<span className='text-gray-300 font-medium'>{total}</span> total
+						</p>
 
-					<div className='flex items-center gap-1'>
-						<button
-							onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-							disabled={currentPage === 1}
-							className='p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors disabled:opacity-30 disabled:cursor-not-allowed'
-						>
-							<ChevronLeft size={16} />
-						</button>
-
-						{Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+						<div className='flex items-center gap-1'>
 							<button
-								key={page}
-								onClick={() => setCurrentPage(page)}
-								className={`size-8 rounded-lg text-xs font-semibold transition-colors ${
-									page === currentPage
-										? 'bg-orange-500/15 text-orange-400 border border-orange-500/30'
-										: 'text-gray-400 hover:bg-white/5 hover:text-white'
-								}`}
+								onClick={() => onPageChange(Math.max(1, page - 1))}
+								disabled={page === 1}
+								className='p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors disabled:opacity-30 disabled:cursor-not-allowed'
 							>
-								{page}
+								<ChevronLeft size={16} />
 							</button>
-						))}
 
-						<button
-							onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-							disabled={currentPage === totalPages}
-							className='p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors disabled:opacity-30 disabled:cursor-not-allowed'
-						>
-							<ChevronRight size={16} />
-						</button>
+							{Array.from({ length: Math.min(pages, 7) }, (_, i) => {
+								let p: number;
+								if (pages <= 7) p = i + 1;
+								else if (page <= 4) p = i + 1;
+								else if (page >= pages - 3) p = pages - 6 + i;
+								else p = page - 3 + i;
+								return (
+									<button
+										key={p}
+										onClick={() => onPageChange(p)}
+										className={`size-8 rounded-lg text-xs font-semibold transition-colors ${p === page
+											? 'bg-orange-500/15 text-orange-400 border border-orange-500/30'
+											: 'text-gray-400 hover:bg-white/5 hover:text-white'
+											}`}
+									>
+										{p}
+									</button>
+								);
+							})}
+
+							<button
+								onClick={() => onPageChange(Math.min(pages, page + 1))}
+								disabled={page === pages}
+								className='p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors disabled:opacity-30 disabled:cursor-not-allowed'
+							>
+								<ChevronRight size={16} />
+							</button>
+						</div>
 					</div>
-				</div>
+				)}
 			</div>
 
 			{/* Detail Modal */}
-			{activeSelectedTxn && (
+			{selectedTxn && (
 				<TransactionDetailModal
-					transaction={activeSelectedTxn}
+					transaction={selectedTxn}
 					onClose={() => setSelectedTxn(null)}
-					onStatusChange={(txnId, status) => {
-						onStatusChange(txnId, status);
-					}}
+					onReview={onReview}
 				/>
 			)}
 		</>

@@ -1,4 +1,5 @@
-import type { GraphData } from './types';
+import type { GraphData, GraphNode, GraphLink } from './types';
+import type { Transaction } from '../../api';
 
 export const NODE_ICONS: Record<string, string> = {
 	USER: '👤',
@@ -14,521 +15,115 @@ export const LINK_TYPE_COLORS: Record<string, string> = {
 	LOCATION: 'rgba(139, 92, 246, 0.2)',
 };
 
-export const QRIS_GRAPH_DATA: GraphData = {
-	nodes: [
-		// === High-risk transaction cluster ===
-		{
-			id: 'TX-9921',
-			name: 'TX-9921',
-			type: 'TRANSACTION',
-			riskScore: 92,
-			val: 28,
-			color: '#ef4444',
-		},
-		{
-			id: 'TX-9920',
-			name: 'TX-9920',
-			type: 'TRANSACTION',
-			riskScore: 78,
-			val: 22,
-			color: '#ef4444',
-		},
-		{
-			id: 'TX-9919',
-			name: 'TX-9919',
-			type: 'TRANSACTION',
-			val: 14,
-			color: '#6b7280',
-		},
-		{
-			id: 'TX-9918',
-			name: 'TX-9918',
-			type: 'TRANSACTION',
-			val: 14,
-			color: '#6b7280',
-		},
-		{
-			id: 'TX-9917',
-			name: 'TX-9917',
-			type: 'TRANSACTION',
-			val: 12,
-			color: '#6b7280',
-		},
-		{
-			id: 'TX-9916',
-			name: 'TX-9916',
-			type: 'TRANSACTION',
-			riskScore: 85,
-			val: 20,
-			color: '#ef4444',
-		},
-		{
-			id: 'TX-9915',
-			name: 'TX-9915',
-			type: 'TRANSACTION',
-			val: 10,
-			color: '#6b7280',
-		},
-		{
-			id: 'TX-9914',
-			name: 'TX-9914',
-			type: 'TRANSACTION',
-			val: 10,
-			color: '#6b7280',
-		},
-		{
-			id: 'TX-9913',
-			name: 'TX-9913',
-			type: 'TRANSACTION',
-			val: 12,
-			color: '#6b7280',
-		},
-		{
-			id: 'TX-9912',
-			name: 'TX-9912',
-			type: 'TRANSACTION',
-			val: 10,
-			color: '#6b7280',
-		},
-		{
-			id: 'TX-9911',
-			name: 'TX-9911',
-			type: 'TRANSACTION',
-			val: 10,
-			color: '#6b7280',
-		},
-		{
-			id: 'TX-9910',
-			name: 'TX-9910',
-			type: 'TRANSACTION',
-			val: 10,
-			color: '#6b7280',
-		},
+/**
+ * Build a force-graph from real transactions.
+ * Creates nodes for: payer, merchant, issuer, country, and each transaction.
+ * Links: payer → txn (OWNERSHIP), txn → merchant (PAYMENT), txn → issuer (PAYMENT), country → payer (LOCATION).
+ */
+export function buildGraphFromTransactions(transactions: Transaction[]): GraphData {
+	const nodeMap = new Map<string, GraphNode>();
+	const links: GraphLink[] = [];
 
-		// === Users ===
-		{ id: 'USR-882', name: 'Rian H.', type: 'USER', val: 20, color: '#3b82f6' },
-		{
-			id: 'USR-883',
-			name: 'Sarah K.',
-			type: 'USER',
-			val: 16,
-			color: '#3b82f6',
-		},
-		{ id: 'USR-884', name: 'Budi S.', type: 'USER', val: 14, color: '#3b82f6' },
-		{ id: 'USR-885', name: 'Dewi A.', type: 'USER', val: 14, color: '#3b82f6' },
-		{ id: 'USR-886', name: 'Eko P.', type: 'USER', val: 12, color: '#3b82f6' },
-		{ id: 'USR-887', name: 'Fira L.', type: 'USER', val: 12, color: '#3b82f6' },
-		{ id: 'USR-888', name: 'Gita R.', type: 'USER', val: 10, color: '#3b82f6' },
-		{ id: 'USR-889', name: 'Hadi M.', type: 'USER', val: 10, color: '#3b82f6' },
+	function getOrCreateNode(
+		id: string,
+		name: string,
+		type: GraphNode['type'],
+		opts: { riskScore?: number; val?: number; color?: string } = {},
+	): GraphNode {
+		if (!nodeMap.has(id)) {
+			const defaults: Record<string, { val: number; color: string }> = {
+				USER: { val: 16, color: '#3b82f6' },
+				MERCHANT: { val: 18, color: '#f59e0b' },
+				ISSUER: { val: 14, color: '#10b981' },
+				DEVICE: { val: 10, color: '#8b5cf6' },
+				TRANSACTION: { val: 12, color: '#6b7280' },
+			};
+			const d = defaults[type] || { val: 10, color: '#6b7280' };
+			nodeMap.set(id, {
+				id,
+				name,
+				type,
+				val: opts.val ?? d.val,
+				color: opts.color ?? d.color,
+				riskScore: opts.riskScore,
+			});
+		} else if (opts.riskScore !== undefined) {
+			const node = nodeMap.get(id)!;
+			// Keep the highest risk score
+			node.riskScore = Math.max(node.riskScore ?? 0, opts.riskScore);
+		}
+		return nodeMap.get(id)!;
+	}
 
-		// === Merchants (NMID) ===
-		{
-			id: 'MER-0021',
-			name: 'Warung Abadi',
-			type: 'MERCHANT',
-			riskScore: 88,
-			val: 24,
-			color: '#f59e0b',
-		},
-		{
-			id: 'MER-0025',
-			name: 'Toko Sinar',
-			type: 'MERCHANT',
-			val: 18,
-			color: '#f59e0b',
-		},
-		{
-			id: 'MER-0030',
-			name: 'CV Digital Jaya',
-			type: 'MERCHANT',
-			riskScore: 72,
-			val: 20,
-			color: '#f59e0b',
-		},
-		{
-			id: 'MER-0035',
-			name: 'Kedai Kopi 88',
-			type: 'MERCHANT',
-			val: 14,
-			color: '#f59e0b',
-		},
-		{
-			id: 'MER-0040',
-			name: 'Apotek Sejahtera',
-			type: 'MERCHANT',
-			val: 12,
-			color: '#f59e0b',
-		},
+	for (const txn of transactions) {
+		const riskPct = Math.round(txn.risk_score * 100);
 
-		// === Issuers ===
-		{
-			id: 'ISS-GOPAY',
-			name: 'GoPay',
-			type: 'ISSUER',
-			val: 18,
-			color: '#10b981',
-		},
-		{
-			id: 'ISS-SHOPEE',
-			name: 'ShopeePay',
-			type: 'ISSUER',
-			val: 18,
-			color: '#ee4d2d',
-		},
-		{ id: 'ISS-OVO', name: 'OVO', type: 'ISSUER', val: 16, color: '#6d28d9' },
-		{ id: 'ISS-DANA', name: 'DANA', type: 'ISSUER', val: 16, color: '#0ea5e9' },
+		// Color by risk: red > 70, orange > 40, gray otherwise
+		let txColor = '#6b7280';
+		let txVal = 12;
+		if (txn.risk_score >= 0.7) { txColor = '#ef4444'; txVal = 22 + Math.round(txn.risk_score * 10); }
+		else if (txn.risk_score >= 0.4) { txColor = '#f97316'; txVal = 16; }
 
-		// === Devices ===
-		{
-			id: 'DEV-IP15',
-			name: 'iPhone 15 Pro',
-			type: 'DEVICE',
-			val: 12,
-			color: '#8b5cf6',
-		},
-		{
-			id: 'DEV-S24',
-			name: 'Samsung S24',
-			type: 'DEVICE',
-			val: 12,
-			color: '#8b5cf6',
-		},
-		{
-			id: 'DEV-PIX8',
-			name: 'Pixel 8',
-			type: 'DEVICE',
-			val: 10,
-			color: '#8b5cf6',
-		},
-		{
-			id: 'DEV-RN13',
-			name: 'Redmi Note 13',
-			type: 'DEVICE',
-			val: 10,
-			color: '#8b5cf6',
-		},
-	],
-	links: [
-		// High-risk cluster: USR-882 -> multiple transactions -> MER-0021
-		{
-			source: 'USR-882',
-			target: 'TX-9921',
-			id: 'L1',
+		// Transaction node
+		getOrCreateNode(txn.txn_id, txn.txn_id, 'TRANSACTION', {
+			riskScore: riskPct,
+			val: txVal,
+			color: txColor,
+		});
+
+		// Payer node
+		const payerShort = txn.payer.substring(0, 12);
+		getOrCreateNode(`P-${payerShort}`, payerShort, 'USER');
+
+		// Merchant node
+		getOrCreateNode(`M-${txn.merchant}`, txn.merchant, 'MERCHANT', {
+			riskScore: txn.is_flagged ? riskPct : undefined,
+		});
+
+		// Issuer node
+		getOrCreateNode(`I-${txn.issuer}`, txn.issuer, 'ISSUER');
+
+		// Country node (acts like geo/device)
+		getOrCreateNode(`C-${txn.country}`, txn.country, 'DEVICE');
+
+		// Links
+		links.push({
+			source: `P-${payerShort}`,
+			target: txn.txn_id,
+			id: `L-own-${txn.txn_id}`,
 			type: 'OWNERSHIP',
-			time: '2026-02-25 17:05:12',
-		},
-		{
-			source: 'TX-9921',
-			target: 'MER-0021',
-			id: 'L2',
+			time: txn.timestamp,
+		});
+		links.push({
+			source: txn.txn_id,
+			target: `M-${txn.merchant}`,
+			id: `L-pay-${txn.txn_id}`,
 			type: 'PAYMENT',
-			amount: 4500000,
+			amount: txn.amount_idr,
 			currency: 'IDR',
-			time: '2026-02-25 17:05:12',
-		},
-		{
-			source: 'USR-882',
-			target: 'TX-9920',
-			id: 'L3',
-			type: 'OWNERSHIP',
-			time: '2026-02-25 16:50:00',
-		},
-		{
-			source: 'TX-9920',
-			target: 'MER-0021',
-			id: 'L4',
+			time: txn.timestamp,
+		});
+		links.push({
+			source: txn.txn_id,
+			target: `I-${txn.issuer}`,
+			id: `L-iss-${txn.txn_id}`,
 			type: 'PAYMENT',
-			amount: 3200000,
-			currency: 'IDR',
-			time: '2026-02-25 16:50:00',
-		},
-		{
-			source: 'USR-882',
-			target: 'TX-9919',
-			id: 'L5',
-			type: 'OWNERSHIP',
-			time: '2026-02-25 15:30:00',
-		},
-		{
-			source: 'TX-9919',
-			target: 'MER-0025',
-			id: 'L6',
-			type: 'PAYMENT',
-			amount: 150000,
-			currency: 'IDR',
-			time: '2026-02-25 15:30:00',
-		},
-
-		// Device links
-		{
-			source: 'DEV-IP15',
-			target: 'USR-882',
-			id: 'L7',
+			time: txn.timestamp,
+		});
+		links.push({
+			source: `C-${txn.country}`,
+			target: `P-${payerShort}`,
+			id: `L-geo-${txn.txn_id}`,
 			type: 'LOCATION',
-			time: '2026-01-10',
-		},
-		{
-			source: 'DEV-S24',
-			target: 'USR-883',
-			id: 'L8',
-			type: 'LOCATION',
-			time: '2026-01-15',
-		},
-		{
-			source: 'DEV-PIX8',
-			target: 'USR-884',
-			id: 'L9',
-			type: 'LOCATION',
-			time: '2026-02-01',
-		},
-		{
-			source: 'DEV-RN13',
-			target: 'USR-885',
-			id: 'L10',
-			type: 'LOCATION',
-			time: '2026-02-05',
-		},
+			time: txn.timestamp,
+		});
+	}
 
-		// Suspicious: same device used by multiple users
-		{
-			source: 'DEV-IP15',
-			target: 'USR-884',
-			id: 'L11',
-			type: 'LOCATION',
-			time: '2026-02-20',
-		},
+	return {
+		nodes: Array.from(nodeMap.values()),
+		links,
+	};
+}
 
-		// Other user transactions
-		{
-			source: 'USR-883',
-			target: 'TX-9918',
-			id: 'L12',
-			type: 'OWNERSHIP',
-			time: '2026-02-25 14:00:00',
-		},
-		{
-			source: 'TX-9918',
-			target: 'MER-0021',
-			id: 'L13',
-			type: 'PAYMENT',
-			amount: 850000,
-			currency: 'IDR',
-			time: '2026-02-25 14:00:00',
-		},
-		{
-			source: 'USR-883',
-			target: 'TX-9916',
-			id: 'L14',
-			type: 'OWNERSHIP',
-			time: '2026-02-25 13:00:00',
-		},
-		{
-			source: 'TX-9916',
-			target: 'MER-0030',
-			id: 'L15',
-			type: 'PAYMENT',
-			amount: 2100000,
-			currency: 'IDR',
-			time: '2026-02-25 13:00:00',
-		},
-		{
-			source: 'USR-884',
-			target: 'TX-9917',
-			id: 'L16',
-			type: 'OWNERSHIP',
-			time: '2026-02-24 11:00:00',
-		},
-		{
-			source: 'TX-9917',
-			target: 'MER-0030',
-			id: 'L17',
-			type: 'PAYMENT',
-			amount: 500000,
-			currency: 'IDR',
-			time: '2026-02-24 11:00:00',
-		},
-
-		{
-			source: 'USR-885',
-			target: 'TX-9915',
-			id: 'L18',
-			type: 'OWNERSHIP',
-			time: '2026-02-24 10:00:00',
-		},
-		{
-			source: 'TX-9915',
-			target: 'MER-0035',
-			id: 'L19',
-			type: 'PAYMENT',
-			amount: 45000,
-			currency: 'IDR',
-			time: '2026-02-24 10:00:00',
-		},
-		{
-			source: 'USR-886',
-			target: 'TX-9914',
-			id: 'L20',
-			type: 'OWNERSHIP',
-			time: '2026-02-24 09:00:00',
-		},
-		{
-			source: 'TX-9914',
-			target: 'MER-0035',
-			id: 'L21',
-			type: 'PAYMENT',
-			amount: 32000,
-			currency: 'IDR',
-			time: '2026-02-24 09:00:00',
-		},
-		{
-			source: 'USR-887',
-			target: 'TX-9913',
-			id: 'L22',
-			type: 'OWNERSHIP',
-			time: '2026-02-23 18:00:00',
-		},
-		{
-			source: 'TX-9913',
-			target: 'MER-0040',
-			id: 'L23',
-			type: 'PAYMENT',
-			amount: 120000,
-			currency: 'IDR',
-			time: '2026-02-23 18:00:00',
-		},
-		{
-			source: 'USR-888',
-			target: 'TX-9912',
-			id: 'L24',
-			type: 'OWNERSHIP',
-			time: '2026-02-23 17:00:00',
-		},
-		{
-			source: 'TX-9912',
-			target: 'MER-0025',
-			id: 'L25',
-			type: 'PAYMENT',
-			amount: 75000,
-			currency: 'IDR',
-			time: '2026-02-23 17:00:00',
-		},
-		{
-			source: 'USR-889',
-			target: 'TX-9911',
-			id: 'L26',
-			type: 'OWNERSHIP',
-			time: '2026-02-23 16:00:00',
-		},
-		{
-			source: 'TX-9911',
-			target: 'MER-0040',
-			id: 'L27',
-			type: 'PAYMENT',
-			amount: 200000,
-			currency: 'IDR',
-			time: '2026-02-23 16:00:00',
-		},
-		{
-			source: 'USR-886',
-			target: 'TX-9910',
-			id: 'L28',
-			type: 'OWNERSHIP',
-			time: '2026-02-22 12:00:00',
-		},
-		{
-			source: 'TX-9910',
-			target: 'MER-0021',
-			id: 'L29',
-			type: 'PAYMENT',
-			amount: 1500000,
-			currency: 'IDR',
-			time: '2026-02-22 12:00:00',
-		},
-
-		// Issuer links
-		{
-			source: 'TX-9921',
-			target: 'ISS-GOPAY',
-			id: 'L30',
-			type: 'PAYMENT',
-			time: '2026-02-25 17:05:12',
-		},
-		{
-			source: 'TX-9920',
-			target: 'ISS-GOPAY',
-			id: 'L31',
-			type: 'PAYMENT',
-			time: '2026-02-25 16:50:00',
-		},
-		{
-			source: 'TX-9918',
-			target: 'ISS-SHOPEE',
-			id: 'L32',
-			type: 'PAYMENT',
-			time: '2026-02-25 14:00:00',
-		},
-		{
-			source: 'TX-9916',
-			target: 'ISS-OVO',
-			id: 'L33',
-			type: 'PAYMENT',
-			time: '2026-02-25 13:00:00',
-		},
-		{
-			source: 'TX-9917',
-			target: 'ISS-OVO',
-			id: 'L34',
-			type: 'PAYMENT',
-			time: '2026-02-24 11:00:00',
-		},
-		{
-			source: 'TX-9915',
-			target: 'ISS-DANA',
-			id: 'L35',
-			type: 'PAYMENT',
-			time: '2026-02-24 10:00:00',
-		},
-		{
-			source: 'TX-9914',
-			target: 'ISS-GOPAY',
-			id: 'L36',
-			type: 'PAYMENT',
-			time: '2026-02-24 09:00:00',
-		},
-		{
-			source: 'TX-9913',
-			target: 'ISS-SHOPEE',
-			id: 'L37',
-			type: 'PAYMENT',
-			time: '2026-02-23 18:00:00',
-		},
-		{
-			source: 'TX-9912',
-			target: 'ISS-DANA',
-			id: 'L38',
-			type: 'PAYMENT',
-			time: '2026-02-23 17:00:00',
-		},
-		{
-			source: 'TX-9911',
-			target: 'ISS-OVO',
-			id: 'L39',
-			type: 'PAYMENT',
-			time: '2026-02-23 16:00:00',
-		},
-		{
-			source: 'TX-9910',
-			target: 'ISS-SHOPEE',
-			id: 'L40',
-			type: 'PAYMENT',
-			time: '2026-02-22 12:00:00',
-		},
-		{
-			source: 'TX-9919',
-			target: 'ISS-DANA',
-			id: 'L41',
-			type: 'PAYMENT',
-			time: '2026-02-25 15:30:00',
-		},
-	],
-};
+/** Empty graph for initial state */
+export const EMPTY_GRAPH: GraphData = { nodes: [], links: [] };

@@ -10,6 +10,7 @@ export function useNodePainter(
 	hoverNode: GraphNode | null,
 	selectedNode: GraphNode | null,
 	pulsePhase: number,
+	searchQuery: string = '',
 ) {
 	return useCallback(
 		(node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
@@ -17,6 +18,19 @@ export function useNodePainter(
 			const radius = Math.sqrt((node.val as number) || 10) * 1.8;
 			const isHovered = node === hoverNode;
 			const isSelected = selectedNode && node.id === selectedNode.id;
+
+			let isDimmed = false;
+			if (searchQuery.trim()) {
+				const q = searchQuery.toLowerCase();
+				const matches =
+					(node.name || '').toLowerCase().includes(q) ||
+					(node.id || '').toLowerCase().includes(q) ||
+					(node.type || '').toLowerCase().includes(q);
+				if (!matches) isDimmed = true;
+			}
+
+			// Apply transparency for non-matching nodes
+			ctx.globalAlpha = isDimmed ? 0.12 : 1.0;
 
 			const borderColor =
 				type === 'TRANSACTION'
@@ -96,7 +110,10 @@ export function useNodePainter(
 					ctx.fillText(badgeText, x, badgeY + 2);
 				}
 			}
+
+			// Reset alpha for other canvas elements
+			ctx.globalAlpha = 1.0;
 		},
-		[hoverNode, selectedNode, pulsePhase],
+		[hoverNode, selectedNode, pulsePhase, searchQuery],
 	);
 }

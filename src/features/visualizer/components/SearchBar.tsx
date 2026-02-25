@@ -4,29 +4,32 @@ import type { GraphNode } from '../types';
 
 interface SearchBarProps {
 	nodes: GraphNode[];
+	searchQuery: string;
+	onSearchChange: (q: string) => void;
 	onSelectNode: (node: GraphNode) => void;
 }
 
 export const SearchBar: React.FC<SearchBarProps> = ({
 	nodes,
+	searchQuery,
+	onSearchChange,
 	onSelectNode,
 }) => {
-	const [query, setQuery] = useState('');
 	const [isFocused, setIsFocused] = useState(false);
 
 	const filtered =
-		query.length > 0
+		searchQuery.trim().length > 0
 			? nodes.filter(
-					(n) =>
-						n.name.toLowerCase().includes(query.toLowerCase()) ||
-						n.id.toLowerCase().includes(query.toLowerCase()) ||
-						n.type.toLowerCase().includes(query.toLowerCase()),
-				)
+				(n) =>
+					n.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+					n.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+					n.type.toLowerCase().includes(searchQuery.toLowerCase()),
+			)
 			: [];
 
 	const handleSelect = (node: GraphNode) => {
 		onSelectNode(node);
-		setQuery('');
+		onSearchChange('');
 		setIsFocused(false);
 	};
 
@@ -38,8 +41,8 @@ export const SearchBar: React.FC<SearchBarProps> = ({
 				<Search size={15} className='text-gray-500 shrink-0' />
 				<input
 					type='text'
-					value={query}
-					onChange={(e) => setQuery(e.target.value)}
+					value={searchQuery}
+					onChange={(e) => onSearchChange(e.target.value)}
 					onFocus={() => setIsFocused(true)}
 					onBlur={() => setTimeout(() => setIsFocused(false), 200)}
 					placeholder='Search nodes by name, ID, or type...'
@@ -87,10 +90,10 @@ export const SearchBar: React.FC<SearchBarProps> = ({
 				</div>
 			)}
 
-			{isFocused && query.length > 0 && filtered.length === 0 && (
+			{isFocused && searchQuery.trim().length > 0 && filtered.length === 0 && (
 				<div className='mt-2 bg-[#121212]/95 backdrop-blur-md border border-white/10 rounded-xl p-4'>
 					<p className='text-gray-500 text-xs text-center'>
-						No nodes found for "{query}"
+						No nodes found for "{searchQuery}"
 					</p>
 				</div>
 			)}
