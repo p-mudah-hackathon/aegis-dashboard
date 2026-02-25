@@ -6,6 +6,7 @@ import React, {
 	useCallback,
 } from 'react';
 import ForceGraph2D from 'react-force-graph-2d';
+import { ZoomIn } from 'lucide-react';
 import type { Transaction } from '../types';
 
 /* ─── Local types matching the Visualizer convention ─── */
@@ -74,10 +75,12 @@ export const TransactionFlowGraph: React.FC<TransactionFlowGraphProps> = ({
 	const containerRef = useRef<HTMLDivElement>(null);
 	const mousePos = useRef({ x: 0, y: 0 });
 
+	const [dimensions, setDimensions] = useState({ width: 500, height: 400 });
 	const [hoverNode, setHoverNode] = useState<FlowNode | null>(null);
 	const [nodeTooltip, setNodeTooltip] = useState<NodeTooltipState | null>(null);
 	const [hoverLink, setHoverLink] = useState<FlowLink | null>(null);
 	const [linkTooltip, setLinkTooltip] = useState<LinkTooltipState | null>(null);
+	const [showZoomHint, setShowZoomHint] = useState(true);
 
 	const hoverLinkRef = useRef<FlowLink | null>(null);
 	hoverLinkRef.current = hoverLink;
@@ -154,15 +157,41 @@ export const TransactionFlowGraph: React.FC<TransactionFlowGraphProps> = ({
 		return { nodes, links };
 	}, [txn]);
 
+	/* ── Measure container size ── */
+	useEffect(() => {
+		const el = containerRef.current;
+		if (!el) return;
+		const ro = new ResizeObserver((entries) => {
+			for (const entry of entries) {
+				const { width, height } = entry.contentRect;
+				if (width > 0 && height > 0) {
+					setDimensions({
+						width: Math.floor(width),
+						height: Math.floor(height),
+					});
+				}
+			}
+		});
+		ro.observe(el);
+		return () => ro.disconnect();
+	}, []);
+
 	/* ── Zoom to fit on mount ── */
 	useEffect(() => {
 		const fg = graphRef.current;
 		if (!fg) return;
-		fg.d3Force('charge')?.strength(-100);
-		fg.d3Force('link')?.distance(50);
-		const t = setTimeout(() => fg.zoomToFit(300, 35), 600);
+		fg.d3Force('charge')?.strength(-120);
+		fg.d3Force('link')?.distance(55);
+		const t = setTimeout(() => fg.zoomToFit(300, 40), 600);
 		return () => clearTimeout(t);
 	}, [graphData]);
+
+	/* ── Dismiss zoom hint after 4 seconds ── */
+	useEffect(() => {
+		if (!showZoomHint) return;
+		const t = setTimeout(() => setShowZoomHint(false), 4000);
+		return () => clearTimeout(t);
+	}, [showZoomHint]);
 
 	/* ── Track mouse position for tooltips ── */
 	useEffect(() => {
@@ -182,6 +211,11 @@ export const TransactionFlowGraph: React.FC<TransactionFlowGraphProps> = ({
 		el.addEventListener('mousemove', onMove);
 		return () => el.removeEventListener('mousemove', onMove);
 	}, []);
+
+	/* ── Hide zoom hint on scroll (zoom) ── */
+	const handleWheel = useCallback(() => {
+		if (showZoomHint) setShowZoomHint(false);
+	}, [showZoomHint]);
 
 	/* ── Node hover handler ── */
 	const handleNodeHover = useCallback((node: any) => {
@@ -246,7 +280,7 @@ export const TransactionFlowGraph: React.FC<TransactionFlowGraphProps> = ({
 			ctx.textBaseline = 'middle';
 			ctx.fillText(TYPE_ICONS[n.type], x, y);
 
-			// Label (always visible since the graph is small)
+			// Label
 			const fontSize = Math.max(10 / globalScale, 3);
 			ctx.font = `600 ${fontSize}px Inter, system-ui, sans-serif`;
 			ctx.textAlign = 'center';
@@ -270,20 +304,42 @@ export const TransactionFlowGraph: React.FC<TransactionFlowGraphProps> = ({
 	);
 
 	return (
-		<div className='bg-white/[0.02] rounded-xl border border-white/5 overflow-hidden'>
-			<div className='px-4 pt-3 pb-1 flex items-center gap-2'>
-				<span className='text-[11px]'>🔗</span>
-				<span className='text-[11px] font-bold text-gray-400 uppercase tracking-wider'>
-					Fund Flow
-				</span>
+		<div className='flex flex-col h-full'>
+			{/* Header */}
+			<div className='shrink-0 px-5 pt-4 pb-2 flex items-center justify-between'>
+				<div className='flex items-center gap-2'>
+					<span className='text-[11px]'>🔗</span>
+					<span className='text-[11px] font-bold text-gray-400 uppercase tracking-wider'>
+						Fund Flow
+					</span>
+				</div>
+				{/* Legend */}
+				<div className='flex flex-wrap gap-3'>
+					{Object.entries(TYPE_COLORS).map(([type, color]) => (
+						<div key={type} className='flex items-center gap-1.5'>
+							<div
+								className='size-2 rounded-full'
+								style={{ backgroundColor: color }}
+							/>
+							<span className='text-[9px] text-gray-500 capitalize'>
+								{type.toLowerCase()}
+							</span>
+						</div>
+					))}
+				</div>
 			</div>
 
-			<div ref={containerRef} className='relative' style={{ height: 220 }}>
+			{/* Graph Canvas — fills remaining space */}
+			<div
+				ref={containerRef}
+				className='relative flex-1 min-h-0'
+				onWheel={handleWheel}
+			>
 				<ForceGraph2D
 					ref={graphRef}
 					graphData={graphData}
-					width={450}
-					height={220}
+					width={dimensions.width}
+					height={dimensions.height}
 					backgroundColor='transparent'
 					nodeCanvasObject={paintNode}
 					nodePointerAreaPaint={(node: any, color, ctx) => {
@@ -313,7 +369,17 @@ export const TransactionFlowGraph: React.FC<TransactionFlowGraphProps> = ({
 					warmupTicks={50}
 				/>
 
-				{/* Node Tooltip — appears on hover */}
+				{/* Zoom Hint — fades out after 4s or on first scroll */}
+				{showZoomHint && (
+					<div className='absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-black/70 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 animate-pulse'>
+						<ZoomIn size={14} className='text-gray-300' />
+						<span className='text-[11px] text-gray-300'>
+							Scroll to zoom · Drag to pan
+						</span>
+					</div>
+				)}
+
+				{/* Node Tooltip */}
 				{nodeTooltip && (
 					<div
 						className='absolute pointer-events-none z-50'
@@ -347,7 +413,7 @@ export const TransactionFlowGraph: React.FC<TransactionFlowGraphProps> = ({
 					</div>
 				)}
 
-				{/* Edge Tooltip — appears on hover (same style as Visualizer) */}
+				{/* Edge Tooltip */}
 				{linkTooltip && (
 					<div
 						className='absolute pointer-events-none z-50'
@@ -403,21 +469,6 @@ export const TransactionFlowGraph: React.FC<TransactionFlowGraphProps> = ({
 						</div>
 					</div>
 				)}
-			</div>
-
-			{/* Legend */}
-			<div className='px-4 pb-3 flex flex-wrap gap-3'>
-				{Object.entries(TYPE_COLORS).map(([type, color]) => (
-					<div key={type} className='flex items-center gap-1.5'>
-						<div
-							className='size-2 rounded-full'
-							style={{ backgroundColor: color }}
-						/>
-						<span className='text-[9px] text-gray-500 capitalize'>
-							{type.toLowerCase()}
-						</span>
-					</div>
-				))}
 			</div>
 		</div>
 	);
