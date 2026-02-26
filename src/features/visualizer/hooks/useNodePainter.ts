@@ -11,11 +11,12 @@ export function useNodePainter(
 	selectedNode: GraphNode | null,
 	pulsePhase: number,
 	searchQuery: string = '',
+	connectedNodeIds: Set<string> = new Set(),
 ) {
 	return useCallback(
 		(node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
 			const { x, y, type, riskScore } = node;
-			const radius = Math.sqrt((node.val as number) || 10) * 1.8;
+			const radius = Math.sqrt((node.val as number) || 72) * 1.8;
 			const isHovered = node === hoverNode;
 			const isSelected = selectedNode && node.id === selectedNode.id;
 
@@ -29,7 +30,14 @@ export function useNodePainter(
 				if (!matches) isDimmed = true;
 			}
 
-			// Apply transparency for non-matching nodes
+			if (
+				!isDimmed &&
+				connectedNodeIds.size > 0 &&
+				!connectedNodeIds.has(node.id)
+			) {
+				isDimmed = true;
+			}
+
 			ctx.globalAlpha = isDimmed ? 0.12 : 1.0;
 
 			const borderColor =
@@ -45,7 +53,6 @@ export function useNodePainter(
 								? '#10b981'
 								: '#8b5cf6';
 
-			// Hover / selected glow
 			if (isHovered || isSelected) {
 				ctx.beginPath();
 				ctx.arc(x, y, radius + 6, 0, 2 * Math.PI);
@@ -114,6 +121,6 @@ export function useNodePainter(
 			// Reset alpha for other canvas elements
 			ctx.globalAlpha = 1.0;
 		},
-		[hoverNode, selectedNode, pulsePhase, searchQuery],
+		[hoverNode, selectedNode, pulsePhase, searchQuery, connectedNodeIds],
 	);
 }

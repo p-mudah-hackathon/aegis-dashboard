@@ -1,5 +1,11 @@
-import React, { useRef, useLayoutEffect, useState } from 'react';
-import { ShieldAlert, X } from 'lucide-react';
+import React, {
+	useRef,
+	useLayoutEffect,
+	useState,
+	useCallback,
+	useEffect,
+} from 'react';
+import { ShieldAlert, X, GripVertical } from 'lucide-react';
 import type { GraphNode } from '../types';
 import { NODE_ICONS } from '../constants';
 
@@ -9,6 +15,7 @@ interface NodeCardProps {
 	position: { x: number; y: number };
 	containerSize: { width: number; height: number };
 	onClose: () => void;
+	onInvestigate: (id: string) => void;
 }
 
 const CARD_OFFSET = 20;
@@ -20,82 +27,143 @@ export const NodeCard: React.FC<NodeCardProps> = ({
 	position,
 	containerSize,
 	onClose,
+	onInvestigate,
 }) => {
 	const cardRef = useRef<HTMLDivElement>(null);
-	const [adjustedPos, setAdjustedPos] = useState({ left: 0, top: 0 });
+	const [cardPos, setCardPos] = useState<{ left: number; top: number } | null>(
+		null,
+	);
+	const [isDragging, setIsDragging] = useState(false);
+	const dragOffset = useRef({ x: 0, y: 0 });
 
+	// Calculate initial clamped position
 	useLayoutEffect(() => {
 		const el = cardRef.current;
 		if (!el) return;
 
 		const cardW = el.offsetWidth;
 		const cardH = el.offsetHeight;
+		const container = el.closest('.relative') as HTMLElement;
+		const cW = container?.clientWidth || containerSize.width;
+		const cH = container?.clientHeight || containerSize.height;
 
-		// Default: place card to the right and slightly above the click
 		let left = position.x + CARD_OFFSET;
 		let top = position.y - CARD_OFFSET;
 
-		// Flip left if overflowing right edge
-		if (left + cardW + CARD_MARGIN > containerSize.width) {
+		if (left + cardW + CARD_MARGIN > cW)
 			left = position.x - cardW - CARD_OFFSET;
-		}
+		if (top + cardH + CARD_MARGIN > cH) top = cH - cardH - CARD_MARGIN;
+		if (top < CARD_MARGIN) top = CARD_MARGIN;
+		if (left < CARD_MARGIN) left = CARD_MARGIN;
 
-		// Flip up if overflowing bottom edge
-		if (top + cardH + CARD_MARGIN > containerSize.height) {
-			top = containerSize.height - cardH - CARD_MARGIN;
-		}
-
-		// Clamp to top edge
-		if (top < CARD_MARGIN) {
-			top = CARD_MARGIN;
-		}
-
-		// Clamp to left edge
-		if (left < CARD_MARGIN) {
-			left = CARD_MARGIN;
-		}
-
-		setAdjustedPos({ left, top });
+		setCardPos({ left, top });
 	}, [position, containerSize]);
+
+	// Drag handlers
+	const handleDragStart = useCallback(
+		(e: React.MouseEvent) => {
+			e.preventDefault();
+			e.stopPropagation();
+			if (!cardPos) return;
+			setIsDragging(true);
+			const container = cardRef.current?.closest('.relative') as HTMLElement;
+			const rect = container?.getBoundingClientRect();
+			if (rect) {
+				dragOffset.current = {
+					x: e.clientX - rect.left - cardPos.left,
+					y: e.clientY - rect.top - cardPos.top,
+				};
+			}
+		},
+		[cardPos],
+	);
+
+	useEffect(() => {
+		if (!isDragging) return;
+
+		const handleMove = (e: MouseEvent) => {
+			const container = cardRef.current?.closest('.relative') as HTMLElement;
+			const rect = container?.getBoundingClientRect();
+			if (!rect) return;
+
+			const relX = e.clientX - rect.left;
+			const relY = e.clientY - rect.top;
+
+			setCardPos({
+				left: relX - dragOffset.current.x,
+				top: relY - dragOffset.current.y,
+			});
+		};
+
+		const handleUp = () => setIsDragging(false);
+
+		window.addEventListener('mousemove', handleMove);
+		window.addEventListener('mouseup', handleUp);
+		return () => {
+			window.removeEventListener('mousemove', handleMove);
+			window.removeEventListener('mouseup', handleUp);
+		};
+	}, [isDragging]);
+
+	const borderColor =
+		node.riskScore && node.riskScore > 85
+			? 'border-red-500/30'
+			: node.riskScore && node.riskScore > 70
+				? 'border-orange-500/30'
+				: 'border-white/10';
 
 	return (
 		<div
 			ref={cardRef}
 			className='absolute z-40'
 			style={{
-				left: adjustedPos.left,
-				top: adjustedPos.top,
+				left: cardPos?.left ?? -9999,
+				top: cardPos?.top ?? -9999,
+				visibility: cardPos ? 'visible' : 'hidden',
+				transition: isDragging ? 'none' : 'opacity 0.2s ease',
 			}}
+			onClick={(e) => e.stopPropagation()}
 		>
-			<div className='bg-[#121212] border border-white/10 rounded-2xl p-5 min-w-[250px] shadow-[0_20px_60px_rgba(0,0,0,0.6)]'>
-				{/* Header */}
-				<div className='flex items-center justify-between mb-4'>
+			<div
+				className={`bg-[#121212]/95 backdrop-blur-xl ${borderColor} border rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.7)] min-w-[260px] overflow-hidden`}
+			>
+				{/* Drag handle header */}
+				<div
+					className='flex items-center justify-between px-5 pt-4 pb-3 select-none'
+					style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+					onMouseDown={handleDragStart}
+				>
 					<div className='flex items-center gap-3'>
-						<div className='size-9 rounded-xl bg-white/5 flex items-center justify-center text-base'>
+						<div className='size-10 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-lg'>
 							{NODE_ICONS[node.type] || '○'}
 						</div>
 						<div>
-							<div className='text-white font-bold text-[13px]'>
+							<div className='text-white font-bold text-[13px] leading-tight'>
 								{node.name}
 							</div>
-							<div className='text-gray-500 text-[10px] font-mono'>
+							<div className='text-gray-500 text-[10px] font-mono mt-0.5'>
 								{node.id}
 							</div>
 						</div>
 					</div>
-					<button
-						onClick={onClose}
-						className='p-1 rounded-lg text-gray-500 hover:text-white hover:bg-white/10 transition-colors'
-					>
-						<X size={14} />
-					</button>
+					<div className='flex items-center gap-1'>
+						<GripVertical size={14} className='text-gray-600' />
+						<button
+							onClick={onClose}
+							className='p-1.5 rounded-lg text-gray-500 hover:text-white hover:bg-white/10 transition-colors'
+						>
+							<X size={14} />
+						</button>
+					</div>
 				</div>
 
+				<div className='h-px bg-white/5' />
+
 				{/* Details */}
-				<div className='space-y-2.5'>
+				<div className='px-5 py-3 space-y-2.5'>
 					<div className='flex justify-between items-center'>
 						<span className='text-gray-500 text-[11px]'>Type</span>
-						<span className='text-white text-[11px] font-medium bg-white/5 px-2 py-0.5 rounded-md'>
+						<span className='text-white text-[11px] font-medium bg-white/5 px-2.5 py-1 rounded-lg'>
 							{node.type}
 						</span>
 					</div>
@@ -118,12 +186,12 @@ export const NodeCard: React.FC<NodeCardProps> = ({
 												: 'text-green-400'
 									}`}
 								>
-									{node.riskScore} / 100
+									{node.riskScore}%
 								</span>
 							</div>
 							<div className='w-full bg-white/5 rounded-full h-1.5'>
 								<div
-									className={`h-1.5 rounded-full ${
+									className={`h-1.5 rounded-full transition-all duration-500 ${
 										node.riskScore > 85
 											? 'bg-red-500'
 											: node.riskScore > 70
@@ -137,12 +205,20 @@ export const NodeCard: React.FC<NodeCardProps> = ({
 					)}
 				</div>
 
-				{/* Investigate button for high risk */}
+				{/* Investigate button */}
 				{node.riskScore && node.riskScore > 70 && (
-					<button className='mt-4 w-full py-2 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-[11px] font-semibold hover:bg-red-500/20 transition-colors flex items-center justify-center gap-2'>
-						<ShieldAlert size={12} />
-						Investigate Entity
-					</button>
+					<>
+						<div className='h-px bg-white/5' />
+						<div className='px-5 py-3'>
+							<button
+								onClick={() => onInvestigate(node.id)}
+								className='w-full py-2.5 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-[11px] font-semibold hover:bg-red-500/20 transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-[0_0_20px_rgba(239,68,68,0.1)]'
+							>
+								<ShieldAlert size={12} />
+								Investigate Entity
+							</button>
+						</div>
+					</>
 				)}
 			</div>
 		</div>
