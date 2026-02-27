@@ -6,7 +6,6 @@ import {
 	ChevronLeft,
 	ChevronRight,
 	Loader2,
-	Sparkles
 } from 'lucide-react';
 import type { Transaction } from '../../../api';
 import { TransactionDetailModal } from './TransactionDetailModal';
@@ -29,15 +28,31 @@ interface TransactionTableProps {
 
 function getRiskBadge(score: number): string {
 	if (score >= 0.7) return 'bg-red-500/10 text-red-400 border-red-500/30';
-	if (score >= 0.4) return 'bg-orange-500/10 text-orange-400 border-orange-500/30';
+	if (score >= 0.4)
+		return 'bg-orange-500/10 text-orange-400 border-orange-500/30';
 	return 'bg-green-500/10 text-green-400 border-green-500/30';
 }
 
 function getStatusBadge(txn: Transaction): { label: string; style: string } {
-	if (txn.review_status === 'confirmed_fraud') return { label: '⛔ CONFIRMED', style: 'bg-red-500/10 text-red-400 border-red-500/30' };
-	if (txn.review_status === 'false_positive') return { label: '✅ CLEARED', style: 'bg-green-500/10 text-green-400 border-green-500/30' };
-	if (txn.is_flagged) return { label: '⚠ FLAGGED', style: 'bg-orange-500/10 text-orange-400 border-orange-500/30' };
-	return { label: 'NORMAL', style: 'bg-gray-500/5 text-gray-500 border-gray-500/20' };
+	if (txn.review_status === 'confirmed_fraud')
+		return {
+			label: '⛔ CONFIRMED',
+			style: 'bg-red-500/10 text-red-400 border-red-500/30',
+		};
+	if (txn.review_status === 'false_positive')
+		return {
+			label: '✅ CLEARED',
+			style: 'bg-green-500/10 text-green-400 border-green-500/30',
+		};
+	if (txn.is_flagged)
+		return {
+			label: '⚠ FLAGGED',
+			style: 'bg-orange-500/10 text-orange-400 border-orange-500/30',
+		};
+	return {
+		label: 'NORMAL',
+		style: 'bg-gray-500/5 text-gray-500 border-gray-500/20',
+	};
 }
 
 function getFraudTypeBadge(type: string | null): string {
@@ -54,7 +69,7 @@ function getFraudTypeBadge(type: string | null): string {
 
 function formatFraudType(type: string | null): string {
 	if (!type) return '—';
-	return type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+	return type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 export const TransactionTable: React.FC<TransactionTableProps> = ({
@@ -97,12 +112,36 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
 								onChange={(e) => onFraudTypeChange(e.target.value)}
 								className='bg-transparent text-sm text-gray-300 outline-none appearance-none pr-6 cursor-pointer'
 							>
-								<option className='bg-[#1a1a1a] text-white' value=''>All Types</option>
-								<option className='bg-[#1a1a1a] text-white' value='velocity_attack'>Velocity Attack</option>
-								<option className='bg-[#1a1a1a] text-white' value='card_testing'>Card Testing</option>
-								<option className='bg-[#1a1a1a] text-white' value='collusion_ring'>Collusion Ring</option>
-								<option className='bg-[#1a1a1a] text-white' value='geo_anomaly'>Geo Anomaly</option>
-								<option className='bg-[#1a1a1a] text-white' value='amount_anomaly'>Amount Anomaly</option>
+								<option className='bg-[#1a1a1a] text-white' value=''>
+									All Types
+								</option>
+								<option
+									className='bg-[#1a1a1a] text-white'
+									value='velocity_attack'
+								>
+									Velocity Attack
+								</option>
+								<option
+									className='bg-[#1a1a1a] text-white'
+									value='card_testing'
+								>
+									Card Testing
+								</option>
+								<option
+									className='bg-[#1a1a1a] text-white'
+									value='collusion_ring'
+								>
+									Collusion Ring
+								</option>
+								<option className='bg-[#1a1a1a] text-white' value='geo_anomaly'>
+									Geo Anomaly
+								</option>
+								<option
+									className='bg-[#1a1a1a] text-white'
+									value='amount_anomaly'
+								>
+									Amount Anomaly
+								</option>
 							</select>
 						</div>
 						<button
@@ -110,7 +149,11 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
 							disabled={loading}
 							className='flex items-center gap-2 px-5 py-2.5 bg-[#121212] border border-white/5 rounded-full text-sm font-medium text-gray-300 hover:bg-white/5 transition-colors'
 						>
-							{loading ? <Loader2 className='size-4 animate-spin' /> : <RefreshCw className='size-4' />}
+							{loading ? (
+								<Loader2 className='size-4 animate-spin' />
+							) : (
+								<RefreshCw className='size-4' />
+							)}
 							Refresh
 						</button>
 					</div>
@@ -121,12 +164,17 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
 					{loading && transactions.length === 0 ? (
 						<div className='flex items-center justify-center py-20'>
 							<Loader2 className='size-8 animate-spin text-orange-500' />
-							<span className='ml-3 text-gray-400'>Loading transactions...</span>
+							<span className='ml-3 text-gray-400'>
+								Loading transactions...
+							</span>
 						</div>
 					) : transactions.length === 0 ? (
 						<div className='flex flex-col items-center justify-center py-20 text-gray-500'>
 							<p className='text-lg mb-2'>No transactions yet</p>
-							<p className='text-sm'>Start the Data Filler or run an Attack Simulation to generate data</p>
+							<p className='text-sm'>
+								Start the Data Filler or run an Attack Simulation to generate
+								data
+							</p>
 						</div>
 					) : (
 						<table className='w-full border-collapse'>
@@ -153,9 +201,6 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
 									<th className='pb-4 pt-2 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider'>
 										Status
 									</th>
-									<th className='pb-4 pt-2 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider text-right'>
-										Actions
-									</th>
 								</tr>
 							</thead>
 							<tbody className='divide-y divide-white/5'>
@@ -165,8 +210,9 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
 										<tr
 											key={txn.txn_id}
 											onClick={() => setSelectedTxn(txn)}
-											className={`hover:bg-white/[0.04] transition-colors cursor-pointer ${txn.is_flagged ? 'bg-orange-500/[0.03]' : ''
-												}`}
+											className={`hover:bg-white/[0.04] transition-colors cursor-pointer ${
+												txn.is_flagged ? 'bg-orange-500/[0.03]' : ''
+											}`}
 										>
 											<td className='py-4 px-4 text-sm text-gray-300 font-mono'>
 												{txn.txn_id}
@@ -190,7 +236,9 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
 												</span>
 											</td>
 											<td className='py-4 px-4 text-sm'>
-												<span className={`text-xs font-medium ${getFraudTypeBadge(txn.fraud_type)}`}>
+												<span
+													className={`text-xs font-medium ${getFraudTypeBadge(txn.fraud_type)}`}
+												>
 													{formatFraudType(txn.fraud_type)}
 												</span>
 											</td>
@@ -200,21 +248,6 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
 												>
 													{status.label}
 												</span>
-											</td>
-											<td className='py-4 px-4 text-sm text-right'>
-												{txn.is_flagged && (
-													<button
-														onClick={(e) => {
-															e.stopPropagation();
-															onInvestigate(txn.txn_id);
-														}}
-														className='p-2 rounded-lg bg-orange-500/10 text-orange-400 border border-orange-500/30 hover:bg-orange-500/20 hover:scale-105 transition-all text-xs flex items-center gap-1.5 ml-auto group'
-														title='Investigate with AI'
-													>
-														<Sparkles className='size-3.5 group-hover:animate-pulse' />
-														<span className='hidden xl:inline'>Investigate</span>
-													</button>
-												)}
 											</td>
 										</tr>
 									);
@@ -253,10 +286,11 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
 									<button
 										key={p}
 										onClick={() => onPageChange(p)}
-										className={`size-8 rounded-lg text-xs font-semibold transition-colors ${p === page
-											? 'bg-orange-500/15 text-orange-400 border border-orange-500/30'
-											: 'text-gray-400 hover:bg-white/5 hover:text-white'
-											}`}
+										className={`size-8 rounded-lg text-xs font-semibold transition-colors ${
+											p === page
+												? 'bg-orange-500/15 text-orange-400 border border-orange-500/30'
+												: 'text-gray-400 hover:bg-white/5 hover:text-white'
+										}`}
 									>
 										{p}
 									</button>
@@ -281,6 +315,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
 					transaction={selectedTxn}
 					onClose={() => setSelectedTxn(null)}
 					onReview={onReview}
+					onInvestigate={onInvestigate}
 				/>
 			)}
 		</>
