@@ -18,7 +18,6 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSend, disabled }) => {
 		onSend(trimmed || '(image)', imagePreview || undefined);
 		setText('');
 		setImagePreview(null);
-		// Reset textarea height
 		if (textareaRef.current) {
 			textareaRef.current.style.height = 'auto';
 		}
@@ -46,9 +45,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSend, disabled }) => {
 
 	return (
 		<div className='px-6 py-4 bg-[#0f0f0f] border-t border-white/5'>
-			{/* Unified input container — Gemini-style */}
 			<div className='bg-[#1a1a1a] border border-white/10 rounded-2xl overflow-hidden focus-within:border-orange-500/40 transition-colors'>
-				{/* Image Preview — inside container */}
 				{imagePreview && (
 					<div className='px-4 pt-3'>
 						<div className='relative inline-block'>
@@ -67,7 +64,6 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSend, disabled }) => {
 					</div>
 				)}
 
-				{/* Textarea */}
 				<textarea
 					ref={textareaRef}
 					value={text}
@@ -84,10 +80,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSend, disabled }) => {
 						t.style.height = `${Math.min(t.scrollHeight, 160)}px`;
 					}}
 				/>
-
-				{/* Bottom toolbar — buttons inside the container */}
 				<div className='flex items-center justify-between px-3 pb-3'>
-					{/* Left: add image */}
 					<div className='flex items-center gap-1'>
 						<button
 							onClick={() => fileInputRef.current?.click()}
@@ -104,8 +97,6 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSend, disabled }) => {
 							onChange={handleImageSelect}
 						/>
 					</div>
-
-					{/* Right: send */}
 					<button
 						onClick={handleSend}
 						disabled={disabled || !hasContent}

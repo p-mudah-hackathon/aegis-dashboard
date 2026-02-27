@@ -1,4 +1,3 @@
-/** Simulated bot responses for demo purposes */
 const RESPONSES: Record<string, string> = {
 	default:
 		'I can help you investigate suspicious transactions, analyze fraud patterns, and review risk scores. Try asking me about a specific transaction ID, user, or merchant.',
