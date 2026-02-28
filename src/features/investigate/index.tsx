@@ -63,10 +63,10 @@ export const InvestigatePage: React.FC = () => {
 						) : (
 							<div
 								ref={scrollRef}
-								className='flex-1 overflow-y-auto px-8 py-6 space-y-5 custom-scrollbar'
+								className='flex-1 overflow-y-auto px-8 py-6 space-y-5 custom-scrollbar transition-colors duration-300'
 								style={{
 									background:
-										'radial-gradient(circle at 30% 20%, rgba(249,115,22,0.03) 0%, transparent 50%), #0a0a0a',
+										'radial-gradient(circle at 30% 20%, var(--primary-muted, rgba(249,115,22,0.03)) 0%, transparent 50%), var(--background)',
 								}}
 							>
 								{messages.map((msg) => (

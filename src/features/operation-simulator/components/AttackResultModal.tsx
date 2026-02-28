@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { X, ShieldAlert } from 'lucide-react';
-import { Log, Scenario } from '../types';
+import type { Log, Scenario } from '../types';
 
 interface AttackResultModalProps {
 	isOpen: boolean;
@@ -30,11 +30,11 @@ export const AttackResultModal: React.FC<AttackResultModalProps> = ({
 	const getLogStyle = (type: Log['type']) => {
 		switch (type) {
 			case 'attack':
-				return 'text-orange-400';
+				return 'text-primary/80';
 			case 'blocked':
-				return 'text-red-500 font-bold';
+				return 'text-danger font-bold';
 			case 'success':
-				return 'text-emerald-400 font-bold';
+				return 'text-success font-bold';
 			default:
 				return 'text-zinc-500';
 		}
@@ -42,19 +42,19 @@ export const AttackResultModal: React.FC<AttackResultModalProps> = ({
 
 	return (
 		<div className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300'>
-			<div className='bg-[#0a0a0a] border border-white/10 w-full max-w-2xl rounded-3xl overflow-hidden shadow-2xl flex flex-col h-[600px]'>
-				<div className='px-6 py-4 border-b border-white/5 bg-zinc-900/50 flex items-center justify-between'>
+			<div className='bg-background border border-border-subtle w-full max-w-2xl rounded-3xl overflow-hidden shadow-2xl flex flex-col h-[600px]'>
+				<div className='px-6 py-4 border-b border-border-subtle bg-surface-2 flex items-center justify-between'>
 					<div className='flex items-center gap-3'>
 						<div
-							className={`p-2 rounded-xl border bg-black ${scenario.borderColor} ${scenario.glowColor}`}
+							className={`p-2 rounded-xl border bg-background ${scenario.borderColor} ${scenario.glowColor}`}
 						>
 							<scenario.icon size={20} className={`${scenario.color}`} />
 						</div>
 						<div>
-							<h3 className='text-white font-bold'>
+							<h3 className='text-text-primary font-bold'>
 								{scenario.title} Analysis
 							</h3>
-							<p className='text-zinc-500 text-[10px] uppercase tracking-wider font-mono'>
+							<p className='text-text-muted text-[10px] uppercase tracking-wider font-mono'>
 								Simulation ID:{' '}
 								{Math.random().toString(36).substring(7).toUpperCase()}
 							</p>
@@ -62,7 +62,7 @@ export const AttackResultModal: React.FC<AttackResultModalProps> = ({
 					</div>
 					<button
 						onClick={onClose}
-						className='p-2 hover:bg-white/5 rounded-full transition-colors text-zinc-500 hover:text-white'
+						className='p-2 hover:bg-surface-3 rounded-full transition-colors text-text-muted hover:text-text-primary'
 					>
 						<X size={20} />
 					</button>
@@ -99,7 +99,7 @@ export const AttackResultModal: React.FC<AttackResultModalProps> = ({
 							</div>
 						))}
 						{isSimulating && (
-							<div className='flex items-center gap-2 text-red-500 animate-pulse'>
+							<div className='flex items-center gap-2 text-danger animate-pulse'>
 								<span className='opacity-50'>$</span>
 								<span>ANALYZING_BEHAVIORAL_NODES...</span>
 							</div>
@@ -108,14 +108,14 @@ export const AttackResultModal: React.FC<AttackResultModalProps> = ({
 				</div>
 
 				{!isSimulating && (
-					<div className='p-6 bg-[#0d0d0d] border-t border-white/5 animate-in slide-in-from-bottom-4'>
+					<div className='p-6 bg-surface-2 border-t border-border-subtle animate-in slide-in-from-bottom-4'>
 						<div className='flex items-start gap-4'>
-							<div className='p-3 bg-red-500/10 rounded-2xl'>
-								<ShieldAlert className='text-red-500' size={24} />
+							<div className='p-3 bg-danger-muted rounded-2xl'>
+								<ShieldAlert className='text-danger' size={24} />
 							</div>
 							<div className='flex-1'>
 								<div className='flex items-center justify-between mb-2'>
-									<span className='text-[10px] text-red-500 font-bold uppercase tracking-widest bg-red-500/10 px-2 py-0.5 rounded'>
+									<span className='text-[10px] text-danger font-bold uppercase tracking-widest bg-danger-muted px-2 py-0.5 rounded'>
 										AEGIS_INTERCEPTED
 									</span>
 									<span className='text-[10px] text-zinc-500 font-mono'>
@@ -132,7 +132,7 @@ export const AttackResultModal: React.FC<AttackResultModalProps> = ({
 						</div>
 						<button
 							onClick={onClose}
-							className='w-full mt-6 py-3 bg-white text-black font-bold rounded-xl hover:bg-zinc-200 transition-colors'
+							className='w-full mt-6 py-3 bg-text-primary text-background font-bold rounded-xl hover:opacity-90 transition-opacity'
 						>
 							Dismiss Analysis
 						</button>

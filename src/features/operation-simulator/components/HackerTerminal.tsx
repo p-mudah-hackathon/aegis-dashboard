@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Log } from '../types';
+import type { Log } from '../types';
 
 interface HackerTerminalProps {
 	logs: Log[];
@@ -21,32 +21,32 @@ export const HackerTerminal: React.FC<HackerTerminalProps> = ({
 	const getLogStyle = (type: Log['type']) => {
 		switch (type) {
 			case 'attack':
-				return 'text-orange-400';
+				return 'text-primary/80';
 			case 'blocked':
-				return 'text-red-500 font-bold';
+				return 'text-danger font-bold';
 			case 'success':
-				return 'text-emerald-400 font-bold';
+				return 'text-success font-bold';
 			default:
 				return 'text-zinc-600';
 		}
 	};
 
 	return (
-		<div className='flex-1 bg-[#050505] border border-white/5 rounded-3xl overflow-hidden flex flex-col shadow-2xl relative'>
-			<div className='px-6 py-3 border-b border-white/5 bg-zinc-900/30 flex items-center justify-between'>
+		<div className='flex-1 bg-surface-2 border border-border-subtle rounded-3xl overflow-hidden flex flex-col shadow-2xl relative'>
+			<div className='px-6 py-3 border-b border-border-subtle bg-surface-3/30 flex items-center justify-between'>
 				<div className='flex items-center gap-2'>
 					<div className='flex gap-1.5'>
-						<div className='size-2.5 rounded-full bg-red-500/20 border border-red-500/40' />
-						<div className='size-2.5 rounded-full bg-amber-500/20 border border-amber-500/40' />
-						<div className='size-2.5 rounded-full bg-emerald-500/20 border border-emerald-500/40' />
+						<div className='size-2.5 rounded-full bg-danger/20 border border-danger/40' />
+						<div className='size-2.5 rounded-full bg-warning/20 border border-warning/40' />
+						<div className='size-2.5 rounded-full bg-success/20 border border-success/40' />
 					</div>
-					<span className='ml-2 text-[10px] font-mono text-zinc-500 uppercase tracking-widest'>
+					<span className='ml-2 text-[10px] font-mono text-text-muted uppercase tracking-widest'>
 						PAYLOAD.ATTACKER.SHELL
 					</span>
 				</div>
-				<div className='flex items-center gap-4 text-[9px] font-mono text-zinc-600 uppercase'>
+				<div className='flex items-center gap-4 text-[9px] font-mono text-text-muted uppercase'>
 					<span>Session: Active</span>
-					<span className='size-1.5 rounded-full bg-emerald-500 animate-pulse' />
+					<span className='size-1.5 rounded-full bg-success animate-pulse' />
 				</div>
 			</div>
 
@@ -55,7 +55,7 @@ export const HackerTerminal: React.FC<HackerTerminalProps> = ({
 				ref={scrollRef}
 			>
 				{logs.length === 0 && (
-					<div className='text-zinc-800 animate-pulse'>
+					<div className='text-text-muted/30 animate-pulse'>
 						[SYSTEM] WAITING_FOR_PAYLOAD_EXECUTION...
 					</div>
 				)}
@@ -76,7 +76,7 @@ export const HackerTerminal: React.FC<HackerTerminalProps> = ({
 									{log.message}
 								</div>
 								{log.details && (
-									<div className='text-zinc-700 opacity-60 ml-5 italic text-[10px]'>
+									<div className='text-text-muted/60 ml-5 italic text-[10px]'>
 										{log.details}
 									</div>
 								)}
@@ -85,13 +85,13 @@ export const HackerTerminal: React.FC<HackerTerminalProps> = ({
 					</div>
 				))}
 				{isSimulating && (
-					<div className='flex items-center gap-2 text-red-500/80 animate-pulse'>
+					<div className='flex items-center gap-2 text-danger/80 animate-pulse'>
 						<span className='opacity-30 font-mono'>$</span>
 						<span className='text-[10px]'>EXECUTING_ADVERSARIAL_VECTOR...</span>
 					</div>
 				)}
 			</div>
-			<div className='absolute inset-0 pointer-events-none bg-gradient-to-t from-red-500/5 to-transparent opacity-20' />
+			<div className='absolute inset-0 pointer-events-none bg-linear-to-t from-danger/5 to-transparent opacity-20' />
 		</div>
 	);
 };

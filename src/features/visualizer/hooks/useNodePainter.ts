@@ -78,9 +78,10 @@ export function useNodePainter(
 			}
 
 			// Main circle
+			const isDark = document.documentElement.classList.contains('dark');
 			ctx.beginPath();
 			ctx.arc(x, y, radius, 0, 2 * Math.PI);
-			ctx.fillStyle = '#1a1a1a';
+			ctx.fillStyle = isDark ? '#1a1a1a' : '#ffffff';
 			ctx.fill();
 			ctx.strokeStyle =
 				isHovered || isSelected ? borderColor : `${borderColor}88`;
@@ -100,7 +101,13 @@ export function useNodePainter(
 				ctx.textAlign = 'center';
 				ctx.textBaseline = 'top';
 				ctx.fillStyle =
-					isHovered || isSelected ? '#ffffff' : 'rgba(255,255,255,0.55)';
+					isHovered || isSelected
+						? isDark
+							? '#ffffff'
+							: '#000000'
+						: isDark
+							? 'rgba(255,255,255,0.55)'
+							: 'rgba(0,0,0,0.55)';
 				ctx.fillText(node.name, x, y + radius + 3);
 
 				if (riskScore && riskScore > 70) {

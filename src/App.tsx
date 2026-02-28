@@ -11,7 +11,7 @@ function App() {
 	const isSimulator = location.pathname === '/operation-simulator';
 
 	return (
-		<div className='flex bg-[#0a0a0a] h-screen text-white font-sans overflow-hidden'>
+		<div className='flex bg-background h-screen text-foreground font-sans overflow-hidden'>
 			{!isSimulator && <Sidebar />}
 
 			<main className='flex-1 flex flex-col overflow-hidden'>

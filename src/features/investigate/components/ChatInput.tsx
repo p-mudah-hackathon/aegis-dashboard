@@ -44,19 +44,19 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSend, disabled }) => {
 	const hasContent = text.trim().length > 0 || !!imagePreview;
 
 	return (
-		<div className='px-6 py-4 bg-[#0f0f0f] border-t border-white/5'>
-			<div className='bg-[#1a1a1a] border border-white/10 rounded-2xl overflow-hidden focus-within:border-orange-500/40 transition-colors'>
+		<div className='px-6 py-4 bg-surface-1 border-t border-border transition-colors duration-300'>
+			<div className='bg-surface-4 border border-border-medium rounded-2xl overflow-hidden focus-within:border-primary/40 transition-colors'>
 				{imagePreview && (
 					<div className='px-4 pt-3'>
 						<div className='relative inline-block'>
 							<img
 								src={imagePreview}
 								alt='Preview'
-								className='max-h-28 rounded-lg border border-white/10'
+								className='max-h-28 rounded-lg border border-border-medium'
 							/>
 							<button
 								onClick={() => setImagePreview(null)}
-								className='absolute -top-2 -right-2 size-5 bg-red-500 rounded-full flex items-center justify-center text-white hover:bg-red-400 transition-colors'
+								className='absolute -top-2 -right-2 size-5 bg-danger rounded-full flex items-center justify-center text-white hover:opacity-90 transition-opacity'
 							>
 								<X size={12} />
 							</button>
@@ -72,7 +72,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSend, disabled }) => {
 					placeholder='Ask about suspicious transactions, fraud patterns...'
 					rows={1}
 					disabled={disabled}
-					className='w-full bg-transparent py-4 px-4 text-sm text-gray-200 placeholder-gray-600 resize-none focus:outline-none disabled:opacity-50'
+					className='w-full bg-transparent py-4 px-4 text-sm text-text-secondary placeholder-text-placeholder resize-none focus:outline-none disabled:opacity-50'
 					style={{ maxHeight: 160 }}
 					onInput={(e) => {
 						const t = e.target as HTMLTextAreaElement;
@@ -84,7 +84,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSend, disabled }) => {
 					<div className='flex items-center gap-1'>
 						<button
 							onClick={() => fileInputRef.current?.click()}
-							className='size-8 rounded-lg flex items-center justify-center text-gray-500 hover:text-white hover:bg-white/10 transition-colors'
+							className='size-8 rounded-lg flex items-center justify-center text-text-faint hover:text-foreground hover:bg-accent transition-colors'
 							title='Add Image'
 						>
 							<ImagePlus size={18} />
@@ -102,8 +102,8 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSend, disabled }) => {
 						disabled={disabled || !hasContent}
 						className={`size-8 rounded-lg flex items-center justify-center transition-colors ${
 							hasContent && !disabled
-								? 'bg-orange-500 text-white hover:bg-orange-400'
-								: 'text-gray-600 cursor-not-allowed'
+								? 'bg-primary text-white hover:bg-primary/80'
+								: 'text-text-placeholder cursor-not-allowed'
 						}`}
 					>
 						<Send size={16} />

@@ -93,20 +93,20 @@ export const Visualizer: React.FC = () => {
 
 	return (
 		<div
-			className='flex-1 h-full w-full bg-[#0a0a0a] overflow-hidden relative'
+			className='flex-1 h-full w-full bg-background overflow-hidden relative transition-colors duration-300'
 			ref={containerRef}
 			style={{ cursor: cursorMode }}
 		>
 			{loading && (
-				<div className='absolute inset-0 flex items-center justify-center bg-[#0a0a0a] z-50'>
-					<Loader2 className='size-8 animate-spin text-orange-500' />
-					<span className='ml-3 text-gray-400'>
+				<div className='absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-50'>
+					<Loader2 className='size-8 animate-spin text-primary' />
+					<span className='ml-3 text-text-muted'>
 						Loading transaction graph...
 					</span>
 				</div>
 			)}
 			{!loading && graphData.nodes.length === 0 && (
-				<div className='absolute inset-0 flex flex-col items-center justify-center bg-[#0a0a0a] text-gray-500 z-50'>
+				<div className='absolute inset-0 flex flex-col items-center justify-center bg-background text-text-muted z-50'>
 					<p className='text-lg mb-2'>No transactions to visualize</p>
 					<p className='text-sm'>
 						Start the Data Filler to generate transactions first
@@ -119,7 +119,7 @@ export const Visualizer: React.FC = () => {
 					<ForceGraph2D
 						ref={graphRef}
 						graphData={graphData}
-						backgroundColor='#0a0a0a'
+						backgroundColor='rgba(0,0,0,0)'
 						width={dimensions.width}
 						height={dimensions.height}
 						nodeCanvasObject={paintNode}
@@ -136,7 +136,7 @@ export const Visualizer: React.FC = () => {
 						onLinkHover={handleLinkHover}
 						linkWidth={(link: any) => (link === hoverLink ? 3.5 : 1.7)}
 						linkColor={(link: any) => {
-							if (link === hoverLink) return '#ffffff';
+							if (link === hoverLink) return 'var(--text-primary)';
 
 							if (selectedNode && connectedNodeIds.size > 0) {
 								const srcId =
@@ -149,7 +149,7 @@ export const Visualizer: React.FC = () => {
 										: link.target?.id;
 								const isConnected =
 									connectedNodeIds.has(srcId) && connectedNodeIds.has(tgtId);
-								if (!isConnected) return 'rgba(255,255,255,0.02)';
+								if (!isConnected) return 'rgba(150,150,150,0.05)';
 							}
 
 							if (searchQuery.trim()) {
@@ -167,17 +167,17 @@ export const Visualizer: React.FC = () => {
 									tName.includes(q) || tId.includes(q) || tType.includes(q);
 
 								if (!sourceMatches && !targetMatches)
-									return 'rgba(255,255,255,0.01)';
+									return 'rgba(150,150,150,0.02)';
 							}
 
-							return LINK_TYPE_COLORS[link.type] || 'rgba(255,255,255,0.06)';
+							return LINK_TYPE_COLORS[link.type] || 'rgba(150,150,150,0.1)';
 						}}
 						linkDirectionalParticles={(link: any) =>
 							link.type === 'PAYMENT' ? 2 : 0
 						}
 						linkDirectionalParticleSpeed={0.004}
 						linkDirectionalParticleWidth={1.5}
-						linkDirectionalParticleColor={() => '#f9731644'}
+						linkDirectionalParticleColor={() => 'var(--primary)'}
 						linkDirectionalArrowLength={4}
 						linkDirectionalArrowRelPos={1}
 						d3AlphaDecay={0.02}

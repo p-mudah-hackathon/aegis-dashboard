@@ -10,9 +10,9 @@ export const NODE_ICONS: Record<string, string> = {
 };
 
 export const LINK_TYPE_COLORS: Record<string, string> = {
-	PAYMENT: 'rgba(249, 115, 22, 0.2)',
-	OWNERSHIP: 'rgba(59, 130, 246, 0.2)',
-	LOCATION: 'rgba(139, 92, 246, 0.2)',
+	PAYMENT: 'rgba(249, 115, 22, 0.3)',
+	OWNERSHIP: 'rgba(59, 130, 246, 0.3)',
+	LOCATION: 'rgba(139, 92, 246, 0.3)',
 };
 
 export function buildGraphFromTransactions(

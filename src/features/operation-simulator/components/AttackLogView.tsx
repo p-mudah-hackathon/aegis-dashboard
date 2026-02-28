@@ -1,25 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
+import type { Log } from '../types';
 import {
 	Zap,
-	Skull,
 	Play,
 	CreditCard,
 	Globe,
 	Activity,
 	Layers,
-	Wifi,
 	X,
 	ShieldAlert,
-	Info,
 } from 'lucide-react';
-
-interface Log {
-	id: number;
-	type: 'attack' | 'system' | 'blocked' | 'success';
-	message: string;
-	timestamp: string;
-	details?: string;
-}
 
 interface Scenario {
 	id: string;
@@ -54,11 +44,11 @@ const AttackResultModal: React.FC<{
 	const getLogStyle = (type: Log['type']) => {
 		switch (type) {
 			case 'attack':
-				return 'text-orange-400';
+				return 'text-primary/80';
 			case 'blocked':
-				return 'text-red-500 font-bold';
+				return 'text-danger font-bold';
 			case 'success':
-				return 'text-emerald-400 font-bold';
+				return 'text-success font-bold';
 			default:
 				return 'text-zinc-500';
 		}
@@ -66,9 +56,9 @@ const AttackResultModal: React.FC<{
 
 	return (
 		<div className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300'>
-			<div className='bg-[#0a0a0a] border border-white/10 w-full max-w-2xl rounded-3xl overflow-hidden shadow-2xl flex flex-col h-[600px]'>
+			<div className='bg-background border border-border-subtle w-full max-w-2xl rounded-3xl overflow-hidden shadow-2xl flex flex-col h-[600px]'>
 				{/* Modal Header */}
-				<div className='px-6 py-4 border-b border-white/5 bg-zinc-900/50 flex items-center justify-between'>
+				<div className='px-6 py-4 border-b border-border-subtle bg-surface-2 flex items-center justify-between'>
 					<div className='flex items-center gap-3'>
 						<div
 							className={`p-2 rounded-xl border bg-black ${scenario.borderColor} ${scenario.glowColor}`}
@@ -125,7 +115,7 @@ const AttackResultModal: React.FC<{
 							</div>
 						))}
 						{isSimulating && (
-							<div className='flex items-center gap-2 text-red-500 animate-pulse'>
+							<div className='flex items-center gap-2 text-danger animate-pulse'>
 								<span className='opacity-50'>$</span>
 								<span>ANALYZING_BEHAVIORAL_NODES...</span>
 							</div>
@@ -135,14 +125,14 @@ const AttackResultModal: React.FC<{
 
 				{/* AEGIS Analysis Footer */}
 				{!isSimulating && (
-					<div className='p-6 bg-[#0d0d0d] border-t border-white/5 animate-in slide-in-from-bottom-4'>
+					<div className='p-6 bg-surface-2 border-t border-border-subtle animate-in slide-in-from-bottom-4'>
 						<div className='flex items-start gap-4'>
-							<div className='p-3 bg-red-500/10 rounded-2xl'>
-								<ShieldAlert className='text-red-500' size={24} />
+							<div className='p-3 bg-danger-muted rounded-2xl'>
+								<ShieldAlert className='text-danger' size={24} />
 							</div>
 							<div className='flex-1'>
 								<div className='flex items-center justify-between mb-2'>
-									<span className='text-[10px] text-red-500 font-bold uppercase tracking-widest bg-red-500/10 px-2 py-0.5 rounded'>
+									<span className='text-[10px] text-danger font-bold uppercase tracking-widest bg-danger-muted px-2 py-0.5 rounded'>
 										AEGIS_INTERCEPTED
 									</span>
 									<span className='text-[10px] text-zinc-500 font-mono'>
@@ -159,7 +149,7 @@ const AttackResultModal: React.FC<{
 						</div>
 						<button
 							onClick={onClose}
-							className='w-full mt-6 py-3 bg-white text-black font-bold rounded-xl hover:bg-zinc-200 transition-colors'
+							className='w-full mt-6 py-3 bg-text-primary text-background font-bold rounded-xl hover:opacity-90 transition-opacity'
 						>
 							Dismiss Analysis
 						</button>
@@ -254,10 +244,10 @@ export const AttackLogView: React.FC = () => {
 				'Same Alipay/WeChat account scans QRIS in Jakarta and Bali 10 minutes apart. Indicates Account Takeover or illicit sharing of static QR screenshots.',
 			reason:
 				'Impossible travel: Speed 600km/h detected between nodes. Flagged as Account Takeover.',
-			color: 'text-amber-400',
-			borderColor: 'border-amber-400/20',
-			glowColor: 'shadow-[0_0_15px_-3px_rgba(251,191,36,0.2)]',
-			accent: 'bg-amber-500',
+			color: 'text-warning',
+			borderColor: 'border-warning/30',
+			glowColor: 'shadow-[0_0_15px_rgba(245,158,11,0.15)]',
+			accent: 'bg-warning',
 			logs: [
 				{ type: 'system', message: 'TXN_LOC: Jakarta (S-Node-01)' },
 				{
@@ -276,10 +266,10 @@ export const AttackLogView: React.FC = () => {
 				'Rp 5M+ cross-border QRIS settlement at 3 AM on a small merchant that normally processes Rp 50K daily average. Off-hours money laundering.',
 			reason:
 				'Off-hours anomaly: High-value settlement outside operating window for SmallBusiness_Tier.',
-			color: 'text-red-400',
-			borderColor: 'border-red-400/20',
-			glowColor: 'shadow-[0_0_15px_-3px_rgba(248,113,113,0.2)]',
-			accent: 'bg-red-500',
+			color: 'text-danger',
+			borderColor: 'border-danger/30',
+			glowColor: 'shadow-[0_0_15px_rgba(239,68,68,0.15)]',
+			accent: 'bg-danger',
 			logs: [
 				{ type: 'system', message: 'SETTLEMENT_REQ: IDR 5,200,000.00' },
 				{ type: 'system', message: 'TIME_SCAN: 03:14:22 [OFF_HOURS]' },
@@ -344,12 +334,13 @@ export const AttackLogView: React.FC = () => {
 						key={s.id}
 						disabled={isSimulating}
 						onClick={() => runScenario(s)}
-						className={`group relative p-8 bg-[#0d0d0d] border border-white/5 rounded-3xl text-left transition-all duration-500 overflow-hidden ${
+						className={`group relative p-8 bg-surface-2 border border-border-subtle rounded-3xl text-left transition-all duration-500 overflow-hidden ${
 							isSimulating
 								? 'opacity-50 cursor-not-allowed'
-								: 'hover:border-white/20 hover:bg-[#121212] hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/50'
+								: 'hover:border-primary/30 hover:bg-surface-3 hover:-translate-y-1 hover:shadow-2xl'
 						}`}
 					>
+						<div className='absolute inset-0 pointer-events-none bg-linear-to-t from-danger/5 to-transparent opacity-20' />
 						<div
 							className={`absolute inset-0 opacity-0 group-hover:opacity-[0.05] transition-opacity duration-700 rounded-3xl ${s.accent} blur-2xl`}
 						/>
@@ -357,7 +348,7 @@ export const AttackLogView: React.FC = () => {
 						<div className='relative z-10'>
 							<div className='flex items-center justify-between mb-6'>
 								<div
-									className={`p-3 rounded-2xl border bg-black transition-all duration-500 group-hover:scale-110 group-hover:bg-zinc-900 ${s.borderColor} ${s.glowColor} group-hover:border-opacity-100 group-hover:shadow-[0_0_20px_0px_rgba(255,255,255,0.1)]`}
+									className={`p-3 rounded-2xl border bg-background transition-all duration-500 group-hover:scale-110 group-hover:bg-surface-3 ${s.borderColor} ${s.glowColor} group-hover:border-opacity-100 group-hover:shadow-[0_0_20px_0px_rgba(255,255,255,0.05)]`}
 								>
 									<s.icon
 										size={24}
@@ -365,15 +356,17 @@ export const AttackLogView: React.FC = () => {
 									/>
 								</div>
 								<div className='flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity'>
-									<span className='text-[10px] text-zinc-500 font-bold uppercase'>
+									<span className='text-[10px] text-text-muted font-bold uppercase'>
 										Simulate
 									</span>
-									<Play size={10} className='text-zinc-500' />
+									<Play size={10} className='text-text-muted' />
 								</div>
 							</div>
 
-							<h3 className='text-white font-bold text-lg mb-3'>{s.title}</h3>
-							<p className='text-zinc-500 text-xs leading-relaxed line-clamp-3'>
+							<h3 className='text-text-primary font-bold text-lg mb-3'>
+								{s.title}
+							</h3>
+							<p className='text-text-muted text-xs leading-relaxed line-clamp-3'>
 								{s.description}
 							</p>
 						</div>

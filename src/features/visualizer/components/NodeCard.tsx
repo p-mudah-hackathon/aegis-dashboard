@@ -107,10 +107,10 @@ export const NodeCard: React.FC<NodeCardProps> = ({
 
 	const borderColor =
 		node.riskScore && node.riskScore > 85
-			? 'border-red-500/30'
+			? 'border-danger/30 shadow-[0_0_20px_rgba(239,68,68,0.1)]'
 			: node.riskScore && node.riskScore > 70
-				? 'border-orange-500/30'
-				: 'border-white/10';
+				? 'border-warning/30'
+				: 'border-border-subtle';
 
 	return (
 		<div
@@ -125,7 +125,7 @@ export const NodeCard: React.FC<NodeCardProps> = ({
 			onClick={(e) => e.stopPropagation()}
 		>
 			<div
-				className={`bg-[#121212]/95 backdrop-blur-xl ${borderColor} border rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.7)] min-w-[260px] overflow-hidden`}
+				className={`bg-surface-2/95 backdrop-blur-xl ${borderColor} border rounded-2xl shadow-xl min-w-[260px] overflow-hidden`}
 			>
 				{/* Drag handle header */}
 				<div
@@ -134,69 +134,69 @@ export const NodeCard: React.FC<NodeCardProps> = ({
 					onMouseDown={handleDragStart}
 				>
 					<div className='flex items-center gap-3'>
-						<div className='size-10 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-lg'>
+						<div className='size-10 rounded-xl bg-surface-3 border border-border-subtle flex items-center justify-center text-lg'>
 							{NODE_ICONS[node.type] || '○'}
 						</div>
 						<div>
-							<div className='text-white font-bold text-[13px] leading-tight'>
+							<div className='text-text-primary font-bold text-[13px] leading-tight'>
 								{node.name}
 							</div>
-							<div className='text-gray-500 text-[10px] font-mono mt-0.5'>
+							<div className='text-text-muted text-[10px] font-mono mt-0.5'>
 								{node.id}
 							</div>
 						</div>
 					</div>
 					<div className='flex items-center gap-1'>
-						<GripVertical size={14} className='text-gray-600' />
+						<GripVertical size={14} className='text-text-muted/40' />
 						<button
 							onClick={onClose}
-							className='p-1.5 rounded-lg text-gray-500 hover:text-white hover:bg-white/10 transition-colors'
+							className='p-1.5 rounded-lg text-text-muted hover:text-text-primary hover:bg-surface-3 transition-colors'
 						>
 							<X size={14} />
 						</button>
 					</div>
 				</div>
 
-				<div className='h-px bg-white/5' />
+				<div className='h-px bg-border-subtle' />
 
 				{/* Details */}
 				<div className='px-5 py-3 space-y-2.5'>
 					<div className='flex justify-between items-center'>
-						<span className='text-gray-500 text-[11px]'>Type</span>
-						<span className='text-white text-[11px] font-medium bg-white/5 px-2.5 py-1 rounded-lg'>
+						<span className='text-text-muted text-[11px]'>Type</span>
+						<span className='text-text-primary text-[11px] font-medium bg-surface-3 px-2.5 py-1 rounded-lg'>
 							{node.type}
 						</span>
 					</div>
 					<div className='flex justify-between items-center'>
-						<span className='text-gray-500 text-[11px]'>Connections</span>
-						<span className='text-white text-[11px] font-semibold'>
+						<span className='text-text-muted text-[11px]'>Connections</span>
+						<span className='text-text-primary text-[11px] font-semibold'>
 							{connectionCount}
 						</span>
 					</div>
 					{node.riskScore !== undefined && node.riskScore > 0 && (
 						<>
 							<div className='flex justify-between items-center'>
-								<span className='text-gray-500 text-[11px]'>Risk Score</span>
+								<span className='text-text-muted text-[11px]'>Risk Score</span>
 								<span
 									className={`text-sm font-bold ${
 										node.riskScore > 85
-											? 'text-red-400'
+											? 'text-danger'
 											: node.riskScore > 70
-												? 'text-orange-400'
-												: 'text-green-400'
+												? 'text-warning'
+												: 'text-success'
 									}`}
 								>
 									{node.riskScore}%
 								</span>
 							</div>
-							<div className='w-full bg-white/5 rounded-full h-1.5'>
+							<div className='w-full bg-surface-3 rounded-full h-1.5'>
 								<div
 									className={`h-1.5 rounded-full transition-all duration-500 ${
 										node.riskScore > 85
-											? 'bg-red-500'
+											? 'bg-danger'
 											: node.riskScore > 70
-												? 'bg-orange-500'
-												: 'bg-green-500'
+												? 'bg-warning'
+												: 'bg-success'
 									}`}
 									style={{ width: `${node.riskScore}%` }}
 								/>
@@ -208,11 +208,11 @@ export const NodeCard: React.FC<NodeCardProps> = ({
 				{/* Investigate button */}
 				{node.riskScore && node.riskScore > 70 && (
 					<>
-						<div className='h-px bg-white/5' />
+						<div className='h-px bg-border-subtle' />
 						<div className='px-5 py-3'>
 							<button
 								onClick={() => onInvestigate(node.id)}
-								className='w-full py-2.5 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-[11px] font-semibold hover:bg-red-500/20 transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-[0_0_20px_rgba(239,68,68,0.1)]'
+								className='w-full py-2.5 bg-danger-muted border border-danger/20 rounded-xl text-danger text-[11px] font-semibold hover:bg-danger/20 transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-[0_0_20px_rgba(239,68,68,0.1)]'
 							>
 								<ShieldAlert size={12} />
 								Investigate Entity

@@ -1,147 +1,295 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
-@import 'shadcn/tailwind.css';
 
-@custom-variant dark (&:is(.dark *));
-
-@theme inline {
-	--radius-sm: calc(var(--radius) - 4px);
-	--radius-md: calc(var(--radius) - 2px);
-	--radius-lg: var(--radius);
-	--radius-xl: calc(var(--radius) + 4px);
-	--radius-2xl: calc(var(--radius) + 8px);
-	--radius-3xl: calc(var(--radius) + 12px);
-	--radius-4xl: calc(var(--radius) + 16px);
+@theme {
 	--color-background: var(--background);
 	--color-foreground: var(--foreground);
 	--color-card: var(--card);
 	--color-card-foreground: var(--card-foreground);
-	--color-popover: var(--popover);
-	--color-popover-foreground: var(--popover-foreground);
-	--color-primary: var(--primary);
-	--color-primary-foreground: var(--primary-foreground);
-	--color-secondary: var(--secondary);
-	--color-secondary-foreground: var(--secondary-foreground);
+	--color-border: var(--border);
 	--color-muted: var(--muted);
 	--color-muted-foreground: var(--muted-foreground);
 	--color-accent: var(--accent);
 	--color-accent-foreground: var(--accent-foreground);
-	--color-destructive: var(--destructive);
-	--color-border: var(--border);
-	--color-input: var(--input);
-	--color-ring: var(--ring);
-	--color-chart-1: var(--chart-1);
-	--color-chart-2: var(--chart-2);
-	--color-chart-3: var(--chart-3);
-	--color-chart-4: var(--chart-4);
-	--color-chart-5: var(--chart-5);
-	--color-sidebar: var(--sidebar);
-	--color-sidebar-foreground: var(--sidebar-foreground);
-	--color-sidebar-primary: var(--sidebar-primary);
-	--color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-	--color-sidebar-accent: var(--sidebar-accent);
-	--color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-	--color-sidebar-border: var(--sidebar-border);
-	--color-sidebar-ring: var(--sidebar-ring);
-}
+	--color-primary: var(--primary);
+	--color-primary-foreground: var(--primary-foreground);
 
-:root {
-	--radius: 0.625rem;
-	--background: oklch(1 0 0);
-	--foreground: oklch(0.145 0 0);
-	--card: oklch(1 0 0);
-	--card-foreground: oklch(0.145 0 0);
-	--popover: oklch(1 0 0);
-	--popover-foreground: oklch(0.145 0 0);
-	--primary: oklch(0.205 0 0);
-	--primary-foreground: oklch(0.985 0 0);
-	--secondary: oklch(0.97 0 0);
-	--secondary-foreground: oklch(0.205 0 0);
-	--muted: oklch(0.97 0 0);
-	--muted-foreground: oklch(0.556 0 0);
-	--accent: oklch(0.97 0 0);
-	--accent-foreground: oklch(0.205 0 0);
-	--destructive: oklch(0.577 0.245 27.325);
-	--border: oklch(0.922 0 0);
-	--input: oklch(0.922 0 0);
-	--ring: oklch(0.708 0 0);
-	--chart-1: oklch(0.646 0.222 41.116);
-	--chart-2: oklch(0.6 0.118 184.704);
-	--chart-3: oklch(0.398 0.07 227.392);
-	--chart-4: oklch(0.828 0.189 84.429);
-	--chart-5: oklch(0.769 0.188 70.08);
-	--sidebar: oklch(0.985 0 0);
-	--sidebar-foreground: oklch(0.145 0 0);
-	--sidebar-primary: oklch(0.205 0 0);
-	--sidebar-primary-foreground: oklch(0.985 0 0);
-	--sidebar-accent: oklch(0.97 0 0);
-	--sidebar-accent-foreground: oklch(0.205 0 0);
-	--sidebar-border: oklch(0.922 0 0);
-	--sidebar-ring: oklch(0.708 0 0);
-}
+	/* ── Extended Surface Colors ── */
+	--color-surface-1: var(--surface-1);
+	--color-surface-2: var(--surface-2);
+	--color-surface-3: var(--surface-3);
+	--color-surface-4: var(--surface-4);
+	--color-surface-elevated: var(--surface-elevated);
+	--color-surface-terminal: var(--surface-terminal);
+	--color-surface-deep: var(--surface-deep);
 
-.dark {
-	--background: oklch(0.145 0 0);
-	--foreground: oklch(0.985 0 0);
-	--card: oklch(0.205 0 0);
-	--card-foreground: oklch(0.985 0 0);
-	--popover: oklch(0.205 0 0);
-	--popover-foreground: oklch(0.985 0 0);
-	--primary: oklch(0.922 0 0);
-	--primary-foreground: oklch(0.205 0 0);
-	--secondary: oklch(0.269 0 0);
-	--secondary-foreground: oklch(0.985 0 0);
-	--muted: oklch(0.269 0 0);
-	--muted-foreground: oklch(0.708 0 0);
-	--accent: oklch(0.269 0 0);
-	--accent-foreground: oklch(0.985 0 0);
-	--destructive: oklch(0.704 0.191 22.216);
-	--border: oklch(1 0 0 / 10%);
-	--input: oklch(1 0 0 / 15%);
-	--ring: oklch(0.556 0 0);
-	--chart-1: oklch(0.488 0.243 264.376);
-	--chart-2: oklch(0.696 0.17 162.48);
-	--chart-3: oklch(0.769 0.188 70.08);
-	--chart-4: oklch(0.627 0.265 303.9);
-	--chart-5: oklch(0.645 0.246 16.439);
-	--sidebar: oklch(0.205 0 0);
-	--sidebar-foreground: oklch(0.985 0 0);
-	--sidebar-primary: oklch(0.488 0.243 264.376);
-	--sidebar-primary-foreground: oklch(0.985 0 0);
-	--sidebar-accent: oklch(0.269 0 0);
-	--sidebar-accent-foreground: oklch(0.985 0 0);
-	--sidebar-border: oklch(1 0 0 / 10%);
-	--sidebar-ring: oklch(0.556 0 0);
+	/* ── Extended Text Colors ── */
+	--color-text-primary: var(--text-primary);
+	--color-text-secondary: var(--text-secondary);
+	--color-text-tertiary: var(--text-tertiary);
+	--color-text-muted: var(--text-muted);
+	--color-text-faint: var(--text-faint);
+	--color-text-placeholder: var(--text-placeholder);
+
+	/* ── Extended Border Colors ── */
+	--color-border-subtle: var(--border-subtle);
+	--color-border-medium: var(--border-medium);
+	--color-border-strong: var(--border-strong);
+
+	/* ── Overlay ── */
+	--color-overlay: var(--overlay);
+	--color-skeleton-shimmer: var(--skeleton-shimmer);
+
+	/* ── Semantic Status Colors ── */
+	--color-danger: var(--sem-danger);
+	--color-danger-muted: var(--sem-danger-muted);
+	--color-warning: var(--sem-warning);
+	--color-warning-muted: var(--sem-warning-muted);
+	--color-success: var(--sem-success);
+	--color-success-muted: var(--sem-success-muted);
+	--color-info: var(--sem-info);
+	--color-info-muted: var(--sem-info-muted);
+	--color-purple: var(--sem-purple);
+	--color-purple-muted: var(--sem-purple-muted);
+	--color-cyan: var(--sem-cyan);
+	--color-pink: var(--sem-pink);
+	--color-yellow: var(--sem-yellow);
+	--color-amber: var(--sem-amber);
+
+	/* ── Graph / Visualizer Node Colors ── */
+	--color-node-user: var(--node-user);
+	--color-node-merchant: var(--node-merchant);
+	--color-node-issuer: var(--node-issuer);
+	--color-node-device: var(--node-device);
+	--color-node-transaction: var(--node-transaction);
+	--color-node-high-risk: var(--node-high-risk);
 }
 
 @layer base {
-	* {
-		@apply border-border outline-ring/50;
+	:root {
+		/* ── Surface / Background Layers ── */
+		--background: hsl(220, 14%, 96%);
+		--surface-1: hsl(220, 14%, 93%);
+		--surface-2: hsl(220, 14%, 89%);
+		--surface-3: hsl(220, 14%, 85%);
+		--surface-4: hsl(220, 14%, 81%);
+		--surface-elevated: #ffffff;
+		--surface-terminal: hsl(230, 8%, 95%);
+		--surface-deep: hsl(220, 14%, 97%);
+
+		/* ── Card / Component ── */
+		--card: hsl(0, 0%, 100%);
+		--card-foreground: hsl(220, 20%, 12%);
+
+		/* ── Text Hierarchy ── */
+		--foreground: hsl(220, 20%, 12%);
+		--text-primary: hsl(220, 20%, 12%);
+		--text-secondary: hsl(220, 14%, 32%);
+		--text-tertiary: hsl(220, 12%, 46%);
+		--text-muted: hsl(220, 10%, 58%);
+		--text-faint: hsl(220, 10%, 70%);
+		--text-placeholder: hsl(220, 10%, 65%);
+
+		/* ── Border / Divider ── */
+		--border: hsl(220, 13%, 82%);
+		--border-subtle: hsla(220, 15%, 10%, 0.08);
+		--border-medium: hsla(220, 15%, 10%, 0.14);
+		--border-strong: hsla(220, 15%, 10%, 0.25);
+
+		/* ── Muted / Accent ── */
+		--muted: hsl(220, 13%, 91%);
+		--muted-foreground: hsl(220, 12%, 42%);
+		--accent: hsl(220, 14%, 90%);
+		--accent-foreground: hsl(220, 20%, 12%);
+
+		/* ── Brand / Primary (Aegis Gold-Amber) ── */
+		--primary: hsl(28, 90%, 50%);
+		--primary-foreground: #ffffff;
+
+		/* ── Overlay / Backdrop ── */
+		--overlay: hsla(220, 15%, 4%, 0.4);
+		--skeleton-shimmer: hsla(0, 0%, 0%, 0.06);
+
+		/* ── Semantic Status Colors ── */
+		--sem-danger: hsl(0, 72%, 51%);
+		--sem-danger-muted: hsl(0, 86%, 97%);
+		--sem-warning: hsl(35, 95%, 45%);
+		--sem-warning-muted: hsl(35, 100%, 96%);
+		--sem-success: hsl(152, 60%, 38%);
+		--sem-success-muted: hsl(152, 76%, 96%);
+		--sem-info: hsl(215, 80%, 50%);
+		--sem-info-muted: hsl(215, 100%, 97%);
+		--sem-purple: hsl(265, 60%, 55%);
+		--sem-purple-muted: hsl(265, 100%, 97%);
+		--sem-cyan: hsl(190, 80%, 44%);
+		--sem-pink: hsl(330, 70%, 55%);
+		--sem-yellow: hsl(45, 95%, 45%);
+		--sem-amber: hsl(35, 95%, 45%);
+
+		/* ── Graph / Visualizer Node Colors ── */
+		--node-user: var(--sem-info);
+		--node-merchant: var(--sem-amber);
+		--node-issuer: var(--sem-success);
+		--node-device: var(--sem-purple);
+		--node-transaction: var(--text-tertiary);
+		--node-high-risk: var(--sem-danger);
 	}
+
+	.dark {
+		/* ── Surface / Background Layers ── */
+		--background: hsl(230, 15%, 6%);
+		--surface-1: hsl(230, 14%, 8%);
+		--surface-2: hsl(230, 13%, 11%);
+		--surface-3: hsl(230, 12%, 14%);
+		--surface-4: hsl(230, 11%, 18%);
+		--surface-elevated: hsl(230, 12%, 16%);
+		--surface-terminal: hsl(230, 18%, 3%);
+		--surface-deep: hsl(230, 15%, 3%);
+
+		/* ── Card / Component ── */
+		--card: hsl(230, 14%, 9%);
+		--card-foreground: hsl(0, 0%, 98%);
+
+		/* ── Text Hierarchy ── */
+		--foreground: hsl(0, 0%, 98%);
+		--text-primary: hsl(0, 0%, 98%);
+		--text-secondary: hsl(220, 10%, 80%);
+		--text-tertiary: hsl(220, 8%, 65%);
+		--text-muted: hsl(220, 8%, 52%);
+		--text-faint: hsl(220, 6%, 38%);
+		--text-placeholder: hsl(220, 6%, 33%);
+
+		/* ── Border / Divider ── */
+		--border: hsla(220, 10%, 100%, 0.08);
+		--border-subtle: hsla(220, 10%, 100%, 0.06);
+		--border-medium: hsla(220, 10%, 100%, 0.12);
+		--border-strong: hsla(220, 10%, 100%, 0.22);
+
+		/* ── Muted / Accent ── */
+		--muted: hsl(230, 13%, 12%);
+		--muted-foreground: hsl(220, 8%, 62%);
+		--accent: hsl(230, 12%, 15%);
+		--accent-foreground: hsl(0, 0%, 100%);
+
+		/* ── Brand / Primary ── */
+		--primary: hsl(28, 90%, 54%);
+		--primary-foreground: #ffffff;
+
+		/* ── Overlay / Backdrop ── */
+		--overlay: hsla(230, 15%, 0%, 0.75);
+		--skeleton-shimmer: hsla(0, 0%, 100%, 0.05);
+
+		/* ── Semantic Status Colors ── */
+		--sem-danger: hsl(350, 75%, 55%);
+		--sem-danger-muted: hsla(350, 75%, 55%, 0.15);
+		--sem-warning: hsl(38, 95%, 48%);
+		--sem-warning-muted: hsla(38, 95%, 48%, 0.15);
+		--sem-success: hsl(150, 60%, 45%);
+		--sem-success-muted: hsla(150, 60%, 45%, 0.15);
+		--sem-info: hsl(210, 85%, 55%);
+		--sem-info-muted: hsla(210, 85%, 55%, 0.15);
+		--sem-purple: hsl(265, 70%, 60%);
+		--sem-purple-muted: hsla(265, 70%, 60%, 0.15);
+		--sem-cyan: hsl(190, 80%, 48%);
+		--sem-pink: hsl(330, 75%, 60%);
+		--sem-yellow: hsl(45, 95%, 50%);
+		--sem-amber: hsl(35, 95%, 50%);
+
+		/* ── Graph / Visualizer Node Colors ── */
+		--node-user: hsl(210, 85%, 55%);
+		--node-merchant: hsl(35, 95%, 50%);
+		--node-issuer: hsl(150, 60%, 45%);
+		--node-device: hsl(265, 70%, 60%);
+		--node-transaction: hsl(220, 8%, 52%);
+		--node-high-risk: hsl(350, 75%, 55%);
+	}
+
 	body {
-		@apply bg-background text-foreground;
+		background-color: var(--background);
+		color: var(--foreground);
+		transition:
+			background-color 0.3s ease,
+			color 0.3s ease;
 	}
 }
 
-/* Custom scrollbar for dark UI */
-.custom-scrollbar {
+/* ─── Premium Custom Scrollbar ─── */
+
+/* Global thin scrollbar for all scrollable areas */
+* {
 	scrollbar-width: thin;
-	scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
+	scrollbar-color: var(--scrollbar-thumb) transparent;
 }
 
-.custom-scrollbar::-webkit-scrollbar {
+:root {
+	--scrollbar-thumb: hsla(220, 10%, 50%, 0.2);
+	--scrollbar-thumb-hover: hsla(220, 10%, 50%, 0.4);
+	--scrollbar-thumb-active: hsla(28, 90%, 50%, 0.5);
+	--scrollbar-track: transparent;
+}
+
+.dark {
+	--scrollbar-thumb: hsla(0, 0%, 100%, 0.08);
+	--scrollbar-thumb-hover: hsla(0, 0%, 100%, 0.18);
+	--scrollbar-thumb-active: hsla(28, 90%, 54%, 0.45);
+	--scrollbar-track: transparent;
+}
+
+/* WebKit browsers (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
 	width: 6px;
+	height: 6px;
 }
 
-.custom-scrollbar::-webkit-scrollbar-track {
+::-webkit-scrollbar-track {
+	background: var(--scrollbar-track);
+	border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb {
+	background: var(--scrollbar-thumb);
+	border-radius: 999px;
+	border: 1px solid transparent;
+	background-clip: padding-box;
+	transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+	background: var(--scrollbar-thumb-hover);
+}
+
+::-webkit-scrollbar-thumb:active {
+	background: var(--scrollbar-thumb-active);
+}
+
+::-webkit-scrollbar-corner {
 	background: transparent;
 }
 
+/* .custom-scrollbar — enhanced scrollbar for prominent scroll areas */
+.custom-scrollbar {
+	scrollbar-width: thin;
+	scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+	width: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+	background: var(--scrollbar-track);
+	margin: 4px 0;
+}
+
 .custom-scrollbar::-webkit-scrollbar-thumb {
-	background: rgba(255, 255, 255, 0.08);
-	border-radius: 3px;
+	background: var(--scrollbar-thumb);
+	border-radius: 999px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-	background: rgba(255, 255, 255, 0.15);
+	background: var(--scrollbar-thumb-hover);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:active {
+	background: var(--scrollbar-thumb-active);
 }

@@ -10,6 +10,7 @@ interface StatCardProps {
 	borderColor: string;
 	iconBgColor: string;
 	iconColor: string;
+	cardBgColor?: string;
 }
 
 export const StatCard: React.FC<StatCardProps> = ({
@@ -21,16 +22,19 @@ export const StatCard: React.FC<StatCardProps> = ({
 	borderColor,
 	iconBgColor,
 	iconColor,
+	cardBgColor,
 }) => {
 	return (
 		<div
-			className={`bg-[#121212]/50 border-2 rounded-3xl p-6 flex flex-col space-y-4 ${borderColor}`}
+			className={`${cardBgColor || 'bg-card'} border-2 rounded-3xl p-6 flex flex-col space-y-4 ${borderColor}`}
 			style={{ minWidth: '240px' }}
 		>
 			<div className='flex items-start justify-between'>
 				<div className='flex flex-col'>
-					<span className='text-gray-400 text-sm font-medium'>{title}</span>
-					<h3 className='text-white text-xl font-bold mt-1'>
+					<span className='text-muted-foreground text-sm font-medium'>
+						{title}
+					</span>
+					<h3 className='text-foreground text-xl font-bold mt-1'>
 						{title.split(' ')[0]}
 						<br />
 						{title.split(' ').slice(1).join(' ')}
@@ -42,11 +46,11 @@ export const StatCard: React.FC<StatCardProps> = ({
 			</div>
 
 			<div className='flex items-baseline space-x-2'>
-				<span className='text-4xl font-bold text-white'>{value}</span>
-				<span className='text-gray-400 text-sm'>{label}</span>
+				<span className='text-4xl font-bold text-foreground'>{value}</span>
+				<span className='text-muted-foreground text-sm'>{label}</span>
 			</div>
 
-			<p className='text-gray-500 text-xs italic'>{subtitle}</p>
+			<p className='text-muted-foreground/60 text-xs italic'>{subtitle}</p>
 		</div>
 	);
 };

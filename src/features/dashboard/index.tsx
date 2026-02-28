@@ -152,25 +152,25 @@ export const DashboardPage: React.FC = () => {
 
 			{/* System Status Bar */}
 			<div className='flex items-center gap-4 mb-6'>
-				<div className='flex items-center gap-2 px-4 py-2 bg-[#1a1a1a] rounded-xl border border-white/5'>
+				<div className='flex items-center gap-2 px-4 py-2 bg-muted rounded-xl border border-border'>
 					<Cpu
 						size={14}
 						className={
-							model?.aegis_ai_reachable ? 'text-green-400' : 'text-red-400'
+							model?.aegis_ai_reachable ? 'text-success' : 'text-danger'
 						}
 					/>
-					<span className='text-xs text-gray-400'>
+					<span className='text-xs text-muted-foreground'>
 						HTGNN:{' '}
 						<span
 							className={
-								model?.aegis_ai_reachable ? 'text-green-400' : 'text-red-400'
+								model?.aegis_ai_reachable ? 'text-success' : 'text-danger'
 							}
 						>
 							{model?.mode || 'UNKNOWN'}
 						</span>
 					</span>
 					{model?.threshold && (
-						<span className='text-[10px] text-gray-600 ml-1'>
+						<span className='text-[10px] text-muted-foreground/60 ml-1'>
 							θ={model.threshold.toFixed(3)}
 						</span>
 					)}
@@ -181,8 +181,8 @@ export const DashboardPage: React.FC = () => {
 					disabled={fillerLoading}
 					className={`flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold border transition-all ${
 						filler?.is_running
-							? 'bg-red-500/10 text-red-400 border-red-500/30 hover:bg-red-500/20'
-							: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
+							? 'bg-danger-muted text-danger border-danger/30 hover:bg-danger-muted/80'
+							: 'bg-success-muted text-success border-success/30 hover:bg-success-muted/80'
 					} disabled:opacity-50`}
 				>
 					{fillerLoading ? (
@@ -196,18 +196,18 @@ export const DashboardPage: React.FC = () => {
 				</button>
 
 				{filler?.is_running && (
-					<div className='flex items-center gap-2 px-3 py-2 bg-emerald-500/5 rounded-xl border border-emerald-500/20'>
-						<Database size={12} className='text-emerald-400 animate-pulse' />
-						<span className='text-[11px] text-emerald-300 font-mono'>
+					<div className='flex items-center gap-2 px-3 py-2 bg-success-muted rounded-xl border border-success/20'>
+						<Database size={12} className='text-success animate-pulse' />
+						<span className='text-[11px] text-success font-mono'>
 							{filler.total_inserted} inserted
 						</span>
 					</div>
 				)}
 
-				<div className='ml-auto flex items-center gap-2 px-3 py-2 bg-[#1a1a1a] rounded-xl border border-white/5'>
-					<Database size={12} className='text-gray-500' />
-					<span className='text-xs text-gray-400'>
-						<span className='text-white font-bold'>
+				<div className='ml-auto flex items-center gap-2 px-3 py-2 bg-muted rounded-xl border border-border'>
+					<Database size={12} className='text-muted-foreground' />
+					<span className='text-xs text-muted-foreground'>
+						<span className='text-foreground font-bold'>
 							{counts.total.toLocaleString()}
 						</span>{' '}
 						in database
@@ -223,9 +223,10 @@ export const DashboardPage: React.FC = () => {
 					label='Monitored'
 					subtitle='QRIS payments in database'
 					icon={Activity}
-					borderColor='border-blue-500/50'
-					iconBgColor='bg-blue-500/10'
-					iconColor='text-blue-500'
+					borderColor='border-info/30'
+					iconBgColor='bg-info-muted'
+					iconColor='text-info'
+					cardBgColor='bg-info-muted/40'
 				/>
 				<StatCard
 					title='Pending Review'
@@ -233,9 +234,10 @@ export const DashboardPage: React.FC = () => {
 					label='Transactions'
 					subtitle='Flagged, awaiting analyst decision'
 					icon={Clock}
-					borderColor='border-yellow-500/50'
-					iconBgColor='bg-yellow-500/10'
-					iconColor='text-yellow-500'
+					borderColor='border-warning/30'
+					iconBgColor='bg-warning-muted'
+					iconColor='text-warning'
+					cardBgColor='bg-warning-muted/40'
 				/>
 				<StatCard
 					title='Flagged Activity'
@@ -243,9 +245,10 @@ export const DashboardPage: React.FC = () => {
 					label='Flagged'
 					subtitle='High risk score by HTGNN model'
 					icon={AlertTriangle}
-					borderColor='border-orange-500/50'
-					iconBgColor='bg-orange-500/10'
-					iconColor='text-orange-500'
+					borderColor='border-primary/30'
+					iconBgColor='bg-primary/10'
+					iconColor='text-primary'
+					cardBgColor='bg-primary/[0.06]'
 				/>
 				<StatCard
 					title='Confirmed Fraud'
@@ -253,9 +256,10 @@ export const DashboardPage: React.FC = () => {
 					label='Detected'
 					subtitle='Analyst confirmed fraud'
 					icon={ShieldBan}
-					borderColor='border-[#ff4d4d]/50'
-					iconBgColor='bg-[#ff4d4d]/10'
-					iconColor='text-[#ff4d4d]'
+					borderColor='border-danger/30'
+					iconBgColor='bg-danger-muted'
+					iconColor='text-danger'
+					cardBgColor='bg-danger-muted/40'
 				/>
 			</div>
 

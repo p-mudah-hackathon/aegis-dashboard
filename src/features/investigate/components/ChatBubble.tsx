@@ -22,7 +22,7 @@ function renderMarkdown(text: string): React.ReactNode[] {
 				elements.push(
 					<pre
 						key={`code-${codeKey++}`}
-						className='my-2 p-3 bg-black/30 rounded-lg text-[12px] font-mono text-gray-300 overflow-x-auto whitespace-pre-wrap'
+						className='my-2 p-3 bg-surface- terminal rounded-lg text-[12px] font-mono text-text-secondary border border-border-subtle overflow-x-auto whitespace-pre-wrap'
 					>
 						{codeContent.trimEnd()}
 					</pre>,
@@ -42,7 +42,7 @@ function renderMarkdown(text: string): React.ReactNode[] {
 
 		if (line.startsWith('### ')) {
 			elements.push(
-				<p key={i} className='font-bold text-white text-sm mt-3 mb-1'>
+				<p key={i} className='font-bold text-text-primary text-sm mt-3 mb-1'>
 					{inlineFormat(line.slice(4))}
 				</p>,
 			);
@@ -50,7 +50,10 @@ function renderMarkdown(text: string): React.ReactNode[] {
 		}
 		if (line.startsWith('## ')) {
 			elements.push(
-				<p key={i} className='font-bold text-white text-[15px] mt-3 mb-1'>
+				<p
+					key={i}
+					className='font-bold text-text-primary text-[15px] mt-3 mb-1'
+				>
 					{inlineFormat(line.slice(3))}
 				</p>,
 			);
@@ -58,7 +61,7 @@ function renderMarkdown(text: string): React.ReactNode[] {
 		}
 		if (line.startsWith('# ')) {
 			elements.push(
-				<p key={i} className='font-bold text-white text-base mt-3 mb-1'>
+				<p key={i} className='font-bold text-text-primary text-base mt-3 mb-1'>
 					{inlineFormat(line.slice(2))}
 				</p>,
 			);
@@ -69,8 +72,8 @@ function renderMarkdown(text: string): React.ReactNode[] {
 			const content = line.replace(/^\s*[-*•]\s/, '');
 			elements.push(
 				<div key={i} className='flex gap-2 ml-2 my-0.5'>
-					<span className='text-orange-400 shrink-0 mt-0.5'>•</span>
-					<span>{inlineFormat(content)}</span>
+					<span className='text-primary shrink-0 mt-0.5'>•</span>
+					<span className='text-text-secondary'>{inlineFormat(content)}</span>
 				</div>,
 			);
 			continue;
@@ -81,10 +84,12 @@ function renderMarkdown(text: string): React.ReactNode[] {
 			if (match) {
 				elements.push(
 					<div key={i} className='flex gap-2 ml-2 my-0.5'>
-						<span className='text-orange-400 shrink-0 font-bold text-[11px] mt-0.5 min-w-[1.2em] text-right'>
+						<span className='text-primary shrink-0 font-bold text-[11px] mt-0.5 min-w-[1.2em] text-right'>
 							{match[1]}.
 						</span>
-						<span>{inlineFormat(match[2])}</span>
+						<span className='text-text-secondary'>
+							{inlineFormat(match[2])}
+						</span>
 					</div>,
 				);
 				continue;
@@ -92,7 +97,7 @@ function renderMarkdown(text: string): React.ReactNode[] {
 		}
 
 		if (line.trim() === '---' || line.trim() === '***') {
-			elements.push(<hr key={i} className='border-white/10 my-2' />);
+			elements.push(<hr key={i} className='border-border-subtle my-2' />);
 			continue;
 		}
 
@@ -112,7 +117,7 @@ function renderMarkdown(text: string): React.ReactNode[] {
 		elements.push(
 			<pre
 				key={`code-final`}
-				className='my-2 p-3 bg-black/30 rounded-lg text-[12px] font-mono text-gray-300 overflow-x-auto whitespace-pre-wrap'
+				className='my-2 p-3 bg-surface-terminal rounded-lg text-[12px] font-mono text-text-secondary border border-border-subtle overflow-x-auto whitespace-pre-wrap'
 			>
 				{codeContent.trimEnd()}
 			</pre>,
@@ -136,13 +141,13 @@ function inlineFormat(text: string): React.ReactNode[] {
 
 		if (match[2]) {
 			parts.push(
-				<strong key={key++} className='font-bold text-white'>
+				<strong key={key++} className='font-bold text-text-primary'>
 					{match[2]}
 				</strong>,
 			);
 		} else if (match[3]) {
 			parts.push(
-				<em key={key++} className='italic text-gray-300'>
+				<em key={key++} className='italic text-text-secondary'>
 					{match[3]}
 				</em>,
 			);
@@ -150,14 +155,14 @@ function inlineFormat(text: string): React.ReactNode[] {
 			parts.push(
 				<code
 					key={key++}
-					className='px-1.5 py-0.5 bg-white/5 rounded text-orange-300 text-[12px] font-mono'
+					className='px-1.5 py-0.5 bg-surface-2 rounded text-primary text-[12px] font-mono'
 				>
 					{match[4]}
 				</code>,
 			);
 		} else if (match[5]) {
 			parts.push(
-				<del key={key++} className='text-gray-500'>
+				<del key={key++} className='text-text-muted'>
 					{match[5]}
 				</del>,
 			);
@@ -180,25 +185,25 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({ message }) => {
 	return (
 		<div className={`flex gap-3 ${isBot ? '' : 'flex-row-reverse'}`}>
 			<div
-				className={`shrink-0 size-8 rounded-xl flex items-center justify-center ${
+				className={`shrink-0 size-8 rounded-xl flex items-center justify-center transition-colors ${
 					isBot
-						? 'bg-orange-500/10 border border-orange-500/30'
-						: 'bg-blue-500/10 border border-blue-500/30'
+						? 'bg-primary/10 border border-primary/30'
+						: 'bg-info/10 border border-info/30'
 				}`}
 			>
 				{isBot ? (
-					<Bot size={16} className='text-orange-400' />
+					<Bot size={16} className='text-primary' />
 				) : (
-					<User size={16} className='text-blue-400' />
+					<User size={16} className='text-info' />
 				)}
 			</div>
 
 			<div className={`max-w-[80%] ${isBot ? '' : 'text-right'}`}>
 				<div
-					className={`inline-block px-4 py-3 rounded-2xl text-sm leading-relaxed ${
+					className={`inline-block px-4 py-3 rounded-2xl text-sm leading-relaxed transition-all duration-300 ${
 						isBot
-							? 'bg-[#1e1e1e] text-gray-200 rounded-tl-md border border-white/5'
-							: 'bg-orange-500/15 text-gray-100 rounded-tr-md border border-orange-500/20'
+							? 'bg-surface-2 text-text-secondary rounded-tl-md border border-border-subtle'
+							: 'bg-primary/10 text-text-primary rounded-tr-md border border-primary/20'
 					}`}
 				>
 					{message.image && (
@@ -206,7 +211,7 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({ message }) => {
 							<img
 								src={message.image}
 								alt='Attachment'
-								className='max-w-full max-h-48 rounded-lg border border-white/10'
+								className='max-w-full max-h-48 rounded-lg border border-border-subtle'
 							/>
 						</div>
 					)}
@@ -214,7 +219,7 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({ message }) => {
 					{isBot && message.reasoning && (
 						<button
 							onClick={() => setShowReasoning(!showReasoning)}
-							className='flex items-center gap-1.5 mb-2 text-[10px] text-purple-400 hover:text-purple-300 transition-colors'
+							className='flex items-center gap-1.5 mb-2 text-[10px] text-purple hover:opacity-80 transition-opacity'
 						>
 							<Brain size={12} />
 							{showReasoning ? 'Hide' : 'Show'} AI Reasoning
@@ -238,7 +243,7 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({ message }) => {
 						<p className='whitespace-pre-wrap'>{message.content}</p>
 					)}
 				</div>
-				<p className='text-[10px] text-gray-600 mt-1 px-1'>
+				<p className='text-[10px] text-text-muted mt-1 px-1'>
 					{message.timestamp.toLocaleTimeString('id-ID', {
 						hour: '2-digit',
 						minute: '2-digit',

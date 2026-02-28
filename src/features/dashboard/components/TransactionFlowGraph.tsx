@@ -40,7 +40,6 @@ interface LinkTooltipState {
 	link: FlowLink & { source: any; target: any };
 }
 
-/* ─── Color palette ─── */
 const TYPE_COLORS: Record<FlowNode['type'], string> = {
 	USER: '#3b82f6',
 	DEVICE: '#a855f7',
@@ -81,6 +80,15 @@ export const TransactionFlowGraph: React.FC<TransactionFlowGraphProps> = ({
 	const [hoverLink, setHoverLink] = useState<FlowLink | null>(null);
 	const [linkTooltip, setLinkTooltip] = useState<LinkTooltipState | null>(null);
 	const [showZoomHint, setShowZoomHint] = useState(true);
+
+	const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'));
+	useEffect(() => {
+		const observer = new MutationObserver(() => {
+			setIsDark(document.documentElement.classList.contains('dark'));
+		});
+		observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+		return () => observer.disconnect();
+	}, []);
 
 	const hoverLinkRef = useRef<FlowLink | null>(null);
 	hoverLinkRef.current = hoverLink;
@@ -268,7 +276,7 @@ export const TransactionFlowGraph: React.FC<TransactionFlowGraphProps> = ({
 			// Circle
 			ctx.beginPath();
 			ctx.arc(x, y, radius, 0, 2 * Math.PI);
-			ctx.fillStyle = '#1a1a1a';
+			ctx.fillStyle = isDark ? '#1a1a1a' : '#ffffff';
 			ctx.fill();
 			ctx.strokeStyle = isHovered ? n.color : `${n.color}88`;
 			ctx.lineWidth = isHovered ? 2.5 : 1.2;
@@ -285,10 +293,10 @@ export const TransactionFlowGraph: React.FC<TransactionFlowGraphProps> = ({
 			ctx.font = `600 ${fontSize}px Inter, system-ui, sans-serif`;
 			ctx.textAlign = 'center';
 			ctx.textBaseline = 'top';
-			ctx.fillStyle = isHovered ? '#ffffff' : 'rgba(255,255,255,0.55)';
+			ctx.fillStyle = isHovered ? (isDark ? '#ffffff' : '#000000') : (isDark ? 'rgba(255,255,255,0.55)' : 'rgba(0,0,0,0.6)');
 			ctx.fillText(n.name, x, y + radius + 3);
 		},
-		[hoverNode],
+		[hoverNode, isDark],
 	);
 
 	/* ── Resolve node name from link endpoint ── */
@@ -309,7 +317,7 @@ export const TransactionFlowGraph: React.FC<TransactionFlowGraphProps> = ({
 			<div className='shrink-0 px-5 pt-4 pb-2 flex items-center justify-between'>
 				<div className='flex items-center gap-2'>
 					<span className='text-[11px]'>🔗</span>
-					<span className='text-[11px] font-bold text-gray-400 uppercase tracking-wider'>
+					<span className='text-[11px] font-bold text-muted-foreground uppercase tracking-wider'>
 						Fund Flow
 					</span>
 				</div>
@@ -321,7 +329,7 @@ export const TransactionFlowGraph: React.FC<TransactionFlowGraphProps> = ({
 								className='size-2 rounded-full'
 								style={{ backgroundColor: color }}
 							/>
-							<span className='text-[9px] text-gray-500 capitalize'>
+							<span className='text-[9px] text-muted-foreground capitalize'>
 								{type.toLowerCase()}
 							</span>
 						</div>
@@ -354,7 +362,7 @@ export const TransactionFlowGraph: React.FC<TransactionFlowGraphProps> = ({
 					linkWidth={(link: any) => (link === hoverLink ? 2.5 : 0.7)}
 					linkColor={(link: any) => {
 						if (link === hoverLink) return '#f97316';
-						return LINK_COLORS[link.type] || 'rgba(255,255,255,0.06)';
+						return LINK_COLORS[link.type] || (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.1)');
 					}}
 					linkDirectionalArrowLength={4}
 					linkDirectionalArrowRelPos={1}
@@ -372,8 +380,8 @@ export const TransactionFlowGraph: React.FC<TransactionFlowGraphProps> = ({
 				{/* Zoom Hint — fades out after 4s or on first scroll */}
 				{showZoomHint && (
 					<div className='absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-black/70 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 animate-pulse'>
-						<ZoomIn size={14} className='text-gray-300' />
-						<span className='text-[11px] text-gray-300'>
+						<ZoomIn size={14} className='text-muted-foreground' />
+						<span className='text-[11px] text-muted-foreground'>
 							Scroll to zoom · Drag to pan
 						</span>
 					</div>
@@ -389,22 +397,22 @@ export const TransactionFlowGraph: React.FC<TransactionFlowGraphProps> = ({
 							transform: 'translate(16px, -50%)',
 						}}
 					>
-						<div className='bg-[#1a1a1a] rounded-xl shadow-2xl border border-white/10 overflow-hidden min-w-[160px]'>
+						<div className='bg-card rounded-xl shadow-2xl border border-border overflow-hidden min-w-[160px]'>
 							<div
-								className='px-3 py-2 border-b border-white/5'
+								className='px-3 py-2 border-b border-border'
 								style={{
 									borderTopColor: nodeTooltip.node.color,
 									borderTopWidth: 2,
 								}}
 							>
-								<span className='text-[10px] font-bold uppercase tracking-wider text-gray-400'>
+								<span className='text-[10px] font-bold uppercase tracking-wider text-muted-foreground'>
 									{TYPE_ICONS[nodeTooltip.node.type]} {nodeTooltip.node.type}
 								</span>
 							</div>
 							<div className='px-3 py-2'>
 								<div className='flex justify-between items-center gap-4'>
-									<span className='text-[11px] text-gray-500'>Name</span>
-									<span className='text-[12px] font-semibold text-white'>
+									<span className='text-[11px] text-muted-foreground'>Name</span>
+									<span className='text-[12px] font-semibold text-foreground'>
 										{nodeTooltip.node.name}
 									</span>
 								</div>
@@ -423,9 +431,9 @@ export const TransactionFlowGraph: React.FC<TransactionFlowGraphProps> = ({
 							transform: 'translate(16px, -50%)',
 						}}
 					>
-						<div className='bg-[#1a1a1a] rounded-xl shadow-2xl border border-white/10 overflow-hidden min-w-[180px]'>
+						<div className='bg-card rounded-xl shadow-2xl border border-border overflow-hidden min-w-[180px]'>
 							<div
-								className='px-3 py-2 border-b border-white/5'
+								className='px-3 py-2 border-b border-border'
 								style={{
 									borderTopColor:
 										linkTooltip.link.type === 'PAYMENT'
@@ -436,7 +444,7 @@ export const TransactionFlowGraph: React.FC<TransactionFlowGraphProps> = ({
 									borderTopWidth: 2,
 								}}
 							>
-								<span className='text-[10px] font-bold uppercase tracking-wider text-gray-400'>
+								<span className='text-[10px] font-bold uppercase tracking-wider text-muted-foreground'>
 									{linkTooltip.link.type === 'PAYMENT'
 										? '💳 Payment'
 										: linkTooltip.link.type === 'OWNERSHIP'
@@ -446,21 +454,21 @@ export const TransactionFlowGraph: React.FC<TransactionFlowGraphProps> = ({
 							</div>
 							<div className='px-3 py-2 space-y-1.5'>
 								<div className='flex justify-between items-center gap-4'>
-									<span className='text-[11px] text-gray-500'>From</span>
-									<span className='text-[12px] font-semibold text-white'>
+									<span className='text-[11px] text-muted-foreground'>From</span>
+									<span className='text-[12px] font-semibold text-foreground'>
 										{getNodeName(linkTooltip.link.source)}
 									</span>
 								</div>
 								<div className='flex justify-between items-center gap-4'>
-									<span className='text-[11px] text-gray-500'>To</span>
-									<span className='text-[12px] font-semibold text-white'>
+									<span className='text-[11px] text-muted-foreground'>To</span>
+									<span className='text-[12px] font-semibold text-foreground'>
 										{getNodeName(linkTooltip.link.target)}
 									</span>
 								</div>
 								{linkTooltip.link.amount && (
-									<div className='flex justify-between items-center gap-4 pt-1 border-t border-white/5'>
-										<span className='text-[11px] text-gray-500'>Amount</span>
-										<span className='text-[12px] font-bold text-orange-400'>
+									<div className='flex justify-between items-center gap-4 pt-1 border-t border-border'>
+										<span className='text-[11px] text-muted-foreground'>Amount</span>
+										<span className='text-[12px] font-bold text-primary'>
 											IDR {linkTooltip.link.amount.toLocaleString('id-ID')}
 										</span>
 									</div>

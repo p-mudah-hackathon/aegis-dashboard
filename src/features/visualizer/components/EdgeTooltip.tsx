@@ -86,39 +86,39 @@ export const EdgeTooltip: React.FC<EdgeTooltipProps> = ({
 				visibility: adjustedPos ? 'visible' : 'hidden',
 			}}
 		>
-			<div className='bg-[#1a1a1a] rounded-xl shadow-2xl border border-white/10 overflow-hidden min-w-[220px]'>
+			<div className='bg-surface-2 rounded-xl shadow-2xl border border-border-subtle overflow-hidden min-w-[220px]'>
 				{/* Header — tipe koneksi */}
 				<div
-					className='px-4 py-2.5 border-b border-white/5'
+					className='px-4 py-2.5 border-b border-border-subtle'
 					style={{ borderTopColor: accentColor, borderTopWidth: 2 }}
 				>
-					<span className='text-[10px] font-bold uppercase tracking-wider text-gray-400'>
+					<span className='text-[10px] font-bold uppercase tracking-wider text-text-muted'>
 						{LINK_TYPE_LABELS[link.type] || link.type}
 					</span>
 				</div>
 
 				{/* Body */}
 				<div className='px-4 py-3 space-y-2'>
-					{/* Pengirim */}
+					{/* Sender */}
 					<div className='flex justify-between items-center gap-4'>
-						<span className='text-[11px] text-gray-500'>Pengirim</span>
-						<span className='text-[12px] font-semibold text-white'>
+						<span className='text-[11px] text-text-muted'>Sender</span>
+						<span className='text-[12px] font-semibold text-text-primary'>
 							{sourceName}
 						</span>
 					</div>
 
-					{/* Penerima */}
+					{/* Receiver */}
 					<div className='flex justify-between items-center gap-4'>
-						<span className='text-[11px] text-gray-500'>Penerima</span>
-						<span className='text-[12px] font-semibold text-white'>
+						<span className='text-[11px] text-text-muted'>Receiver</span>
+						<span className='text-[12px] font-semibold text-text-primary'>
 							{targetName}
 						</span>
 					</div>
 
-					{/* Nilai Transaksi */}
+					{/* Transaction Value */}
 					{link.amount && (
 						<div className='flex justify-between items-center gap-4'>
-							<span className='text-[11px] text-gray-500'>Nilai Transaksi</span>
+							<span className='text-[11px] text-text-muted'>Amount</span>
 							<span
 								className='text-[12px] font-bold'
 								style={{ color: accentColor }}
@@ -128,10 +128,10 @@ export const EdgeTooltip: React.FC<EdgeTooltipProps> = ({
 						</div>
 					)}
 
-					{/* Waktu */}
-					<div className='flex justify-between items-center gap-4 pt-1 border-t border-white/5'>
-						<span className='text-[11px] text-gray-500'>Waktu</span>
-						<span className='text-[11px] text-gray-300'>{link.time}</span>
+					{/* Time */}
+					<div className='flex justify-between items-center gap-4 pt-1 border-t border-border-subtle'>
+						<span className='text-[11px] text-text-muted'>Time</span>
+						<span className='text-[11px] text-text-secondary'>{link.time}</span>
 					</div>
 				</div>
 			</div>
