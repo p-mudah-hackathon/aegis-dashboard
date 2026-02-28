@@ -49,8 +49,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
 					className='bg-transparent border-none outline-none text-white text-[13px] placeholder:text-gray-600 w-full'
 				/>
 			</div>
-
-			{/* Dropdown results */}
+			
 			{isFocused && filtered.length > 0 && (
 				<div className='mt-2 bg-[#121212]/95 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden shadow-2xl max-h-[240px] overflow-y-auto'>
 					{filtered.slice(0, 8).map((node) => (

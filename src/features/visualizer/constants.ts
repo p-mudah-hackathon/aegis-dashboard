@@ -15,12 +15,9 @@ export const LINK_TYPE_COLORS: Record<string, string> = {
 	LOCATION: 'rgba(139, 92, 246, 0.2)',
 };
 
-/**
- * Build a force-graph from real transactions.
- * Creates nodes for: payer, merchant, issuer, country, and each transaction.
- * Links: payer → txn (OWNERSHIP), txn → merchant (PAYMENT), txn → issuer (PAYMENT), country → payer (LOCATION).
- */
-export function buildGraphFromTransactions(transactions: Transaction[]): GraphData {
+export function buildGraphFromTransactions(
+	transactions: Transaction[],
+): GraphData {
 	const nodeMap = new Map<string, GraphNode>();
 	const links: GraphLink[] = [];
 
@@ -32,11 +29,11 @@ export function buildGraphFromTransactions(transactions: Transaction[]): GraphDa
 	): GraphNode {
 		if (!nodeMap.has(id)) {
 			const defaults: Record<string, { val: number; color: string }> = {
-				USER: { val: 16, color: '#3b82f6' },
-				MERCHANT: { val: 18, color: '#f59e0b' },
-				ISSUER: { val: 14, color: '#10b981' },
-				DEVICE: { val: 10, color: '#8b5cf6' },
-				TRANSACTION: { val: 12, color: '#6b7280' },
+				USER: { val: 96, color: '#3b82f6' },
+				MERCHANT: { val: 108, color: '#f59e0b' },
+				ISSUER: { val: 84, color: '#10b981' },
+				DEVICE: { val: 60, color: '#8b5cf6' },
+				TRANSACTION: { val: 72, color: '#6b7280' },
 			};
 			const d = defaults[type] || { val: 10, color: '#6b7280' };
 			nodeMap.set(id, {
@@ -49,7 +46,6 @@ export function buildGraphFromTransactions(transactions: Transaction[]): GraphDa
 			});
 		} else if (opts.riskScore !== undefined) {
 			const node = nodeMap.get(id)!;
-			// Keep the highest risk score
 			node.riskScore = Math.max(node.riskScore ?? 0, opts.riskScore);
 		}
 		return nodeMap.get(id)!;
@@ -57,36 +53,33 @@ export function buildGraphFromTransactions(transactions: Transaction[]): GraphDa
 
 	for (const txn of transactions) {
 		const riskPct = Math.round(txn.risk_score * 100);
-
-		// Color by risk: red > 70, orange > 40, gray otherwise
 		let txColor = '#6b7280';
-		let txVal = 12;
-		if (txn.risk_score >= 0.7) { txColor = '#ef4444'; txVal = 22 + Math.round(txn.risk_score * 10); }
-		else if (txn.risk_score >= 0.4) { txColor = '#f97316'; txVal = 16; }
+		let txVal = 72;
+		if (txn.risk_score >= 0.7) {
+			txColor = '#ef4444';
+			txVal = 120;
+		} else if (txn.risk_score >= 0.4) {
+			txColor = '#f97316';
+			txVal = 96;
+		}
 
-		// Transaction node
 		getOrCreateNode(txn.txn_id, txn.txn_id, 'TRANSACTION', {
 			riskScore: riskPct,
 			val: txVal,
 			color: txColor,
 		});
 
-		// Payer node
 		const payerShort = txn.payer.substring(0, 12);
 		getOrCreateNode(`P-${payerShort}`, payerShort, 'USER');
 
-		// Merchant node
 		getOrCreateNode(`M-${txn.merchant}`, txn.merchant, 'MERCHANT', {
 			riskScore: txn.is_flagged ? riskPct : undefined,
 		});
 
-		// Issuer node
 		getOrCreateNode(`I-${txn.issuer}`, txn.issuer, 'ISSUER');
 
-		// Country node (acts like geo/device)
 		getOrCreateNode(`C-${txn.country}`, txn.country, 'DEVICE');
 
-		// Links
 		links.push({
 			source: `P-${payerShort}`,
 			target: txn.txn_id,
@@ -125,5 +118,4 @@ export function buildGraphFromTransactions(transactions: Transaction[]): GraphDa
 	};
 }
 
-/** Empty graph for initial state */
 export const EMPTY_GRAPH: GraphData = { nodes: [], links: [] };

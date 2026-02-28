@@ -116,18 +116,20 @@ export interface StatsSnapshot {
 }
 
 // ── Transactions ───────────────────────────────────────────────────────
-export function getTransactions(params: {
-	page?: number;
-	page_size?: number;
-	is_flagged?: boolean;
-	fraud_type?: string;
-	review_status?: string;
-	search?: string;
-	min_risk?: number;
-	max_risk?: number;
-	sort_by?: string;
-	sort_order?: string;
-} = {}): Promise<PaginatedTransactions> {
+export function getTransactions(
+	params: {
+		page?: number;
+		page_size?: number;
+		is_flagged?: boolean;
+		fraud_type?: string;
+		review_status?: string;
+		search?: string;
+		min_risk?: number;
+		max_risk?: number;
+		sort_by?: string;
+		sort_order?: string;
+	} = {},
+): Promise<PaginatedTransactions> {
 	const qs = new URLSearchParams();
 	Object.entries(params).forEach(([k, v]) => {
 		if (v !== undefined && v !== null) qs.set(k, String(v));
@@ -139,7 +141,11 @@ export function getTransaction(txnId: string): Promise<Transaction> {
 	return request(`/api/v1/transactions/${txnId}`);
 }
 
-export function reviewTransaction(txnId: string, status: string, note?: string) {
+export function reviewTransaction(
+	txnId: string,
+	status: string,
+	note?: string,
+) {
 	return request(`/api/v1/transactions/${txnId}/review`, {
 		method: 'POST',
 		body: JSON.stringify({ status, note }),
@@ -147,7 +153,11 @@ export function reviewTransaction(txnId: string, status: string, note?: string) 
 }
 
 // ── Data Filler ────────────────────────────────────────────────────────
-export function startFiller(config?: { min_interval?: number; max_interval?: number; fraud_ratio?: number }): Promise<FillerStatus> {
+export function startFiller(config?: {
+	min_interval?: number;
+	max_interval?: number;
+	fraud_ratio?: number;
+}): Promise<FillerStatus> {
 	return request('/api/v1/filler/start', {
 		method: 'POST',
 		body: JSON.stringify(config || {}),
@@ -193,7 +203,10 @@ export function startChat(txnId: string, message?: string): Promise<ChatReply> {
 	});
 }
 
-export function sendChatMessage(chatId: string, message: string): Promise<ChatReply> {
+export function sendChatMessage(
+	chatId: string,
+	message: string,
+): Promise<ChatReply> {
 	return request(`/api/v1/chat/${chatId}`, {
 		method: 'POST',
 		body: JSON.stringify({ message }),
