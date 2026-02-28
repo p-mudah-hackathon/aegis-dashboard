@@ -7,6 +7,8 @@ import {
 	CheckCircle2,
 } from 'lucide-react';
 
+import { createPaylabsQris } from '../../../api';
+
 interface QRISPaymentViewProps {
 	onPaymentSuccess: (details: { amount: number; merchant: string }) => void;
 }
@@ -19,13 +21,27 @@ export const QRISPaymentView: React.FC<QRISPaymentViewProps> = ({
 	);
 	const [amount] = useState(1500000);
 	const [merchant] = useState('Paylabs Merchant - Gandaria City');
+	const [qrCodeData, setQrCodeData] = useState<string | null>(null);
 
-	const handlePay = () => {
+	const handlePay = async () => {
 		setStatus('processing');
-		setTimeout(() => {
-			setStatus('success');
-			onPaymentSuccess({ amount, merchant });
-		}, 2000);
+		
+		try {
+			// Trigger backend integration which talks to real Paylabs API
+			const res = await createPaylabsQris(amount, merchant);
+			console.log('Real Paylabs QRIS Generated:', res.payCode);
+			setQrCodeData(res.payCode);
+			
+			// Simulate user scan and completion delay
+			setTimeout(() => {
+				setStatus('success');
+				onPaymentSuccess({ amount, merchant });
+			}, 3000);
+		} catch (error) {
+			console.error('Failed to create Paylabs QRIS:', error);
+			setStatus('idle');
+			alert('Failed to connect to Paylabs API. Check credentials/network.');
+		}
 	};
 
 	return (
@@ -51,7 +67,7 @@ export const QRISPaymentView: React.FC<QRISPaymentViewProps> = ({
 						</button>
 					</div>
 
-					{status !== 'success' ? (
+						{status !== 'success' ? (
 						<div className='flex-1 flex flex-col px-6 pt-4'>
 							<div className='size-16 bg-primary rounded-2xl flex items-center justify-center self-center shadow-lg mb-4'>
 								<span className='text-white text-2xl font-bold'>P</span>
@@ -60,22 +76,36 @@ export const QRISPaymentView: React.FC<QRISPaymentViewProps> = ({
 							<h2 className='text-white text-lg font-bold text-center leading-tight mb-1'>
 								{merchant}
 							</h2>
-							<p className='text-success/80 text-[10px] text-center mb-10 tracking-[0.2em] uppercase font-bold'>
+							<p className='text-success/80 text-[10px] text-center mb-6 tracking-[0.2em] uppercase font-bold'>
 								Secured by Paylabs
 							</p>
-							<div className='bg-zinc-900 border border-border-subtle/20 rounded-3xl p-6 mb-8 text-center'>
-								<p className='text-zinc-500 text-[10px] uppercase font-bold tracking-widest mb-1'>
-									Payment Amount
-								</p>
-								<div className='flex items-center justify-center gap-2'>
-									<span className='text-zinc-400 text-sm font-bold pt-1'>
-										IDR
-									</span>
-									<span className='text-white text-3xl font-bold'>
-										{amount.toLocaleString('id-ID')}
-									</span>
+
+							{qrCodeData ? (
+								<div className='flex justify-center mb-6 animate-in fade-in zoom-in duration-500'>
+									<div className='bg-white p-4 rounded-3xl shadow-xl'>
+										<img 
+											src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrCodeData)}`} 
+											alt="QRIS Code" 
+											className='w-48 h-48 sm:w-56 sm:h-56'
+										/>
+									</div>
 								</div>
-							</div>
+							) : (
+								<div className='bg-zinc-900 border border-border-subtle/20 rounded-3xl p-6 mb-6 text-center'>
+									<p className='text-zinc-500 text-[10px] uppercase font-bold tracking-widest mb-1'>
+										Payment Amount
+									</p>
+									<div className='flex items-center justify-center gap-2'>
+										<span className='text-zinc-400 text-sm font-bold pt-1'>
+											IDR
+										</span>
+										<span className='text-white text-3xl font-bold'>
+											{amount.toLocaleString('id-ID')}
+										</span>
+									</div>
+								</div>
+							)}
+
 							<div className='space-y-3 mb-auto'>
 								<label className='text-[10px] text-zinc-500 uppercase font-bold tracking-widest px-2'>
 									Select Source

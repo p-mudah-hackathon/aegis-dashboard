@@ -152,6 +152,25 @@ export function reviewTransaction(
 	});
 }
 
+// ── Paylabs Integrations ───────────────────────────────────────────────
+export interface PaylabsResponse {
+	errCode: string;
+	errInfo: string;
+	merchantId: string;
+	merchantTradeNo: string;
+	payCode: string; // The specific QR code or string
+}
+
+export function createPaylabsQris(
+	amount: number,
+	merchant: string,
+): Promise<PaylabsResponse> {
+	return request('/api/v1/paylabs/create-qris', {
+		method: 'POST',
+		body: JSON.stringify({ amount, merchant }),
+	});
+}
+
 // ── Data Filler ────────────────────────────────────────────────────────
 export function startFiller(config?: {
 	min_interval?: number;
