@@ -16,7 +16,7 @@ const MENU_ITEMS = [
 	{
 		id: 'investigate',
 		path: '/investigate',
-		name: 'AI Chat',
+		name: 'investigate',
 		icon: MessageSquare,
 	},
 	{ id: 'attack', path: '/attack', name: 'Attack Simulator', icon: Skull },
