@@ -1,26 +1,34 @@
-import React, { useState } from 'react';
-import { Smartphone, Skull } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Smartphone, Skull, Sun, Moon } from 'lucide-react';
 import { QRISPaymentView } from './components/QRISPaymentView';
 import { AttackLogView } from './components/AttackLogView';
 
 export const OperationSimulatorPage: React.FC = () => {
 	const [currentView, setCurrentView] = useState<'user' | 'attacker'>('user');
+	const [isDark, setIsDark] = useState(() =>
+		document.documentElement.classList.contains('dark'),
+	);
+
+	useEffect(() => {
+		if (isDark) {
+			document.documentElement.classList.add('dark');
+		} else {
+			document.documentElement.classList.remove('dark');
+		}
+	}, [isDark]);
 
 	return (
 		<div className='flex-1 flex flex-col h-full bg-background overflow-hidden'>
 			{/* Clean Header with Subtle Role Switcher */}
-			<div className='h-16 px-8 flex items-center justify-center border-b border-border-subtle bg-background'>
-				{/* <div className='flex items-center gap-3'>
-					<ShieldCheck className='text-primary' size={20} />
-					<div className='flex flex-col'>
-						<span className='text-[10px] text-zinc-500 uppercase tracking-[0.2em] font-bold leading-none'>
-							Live Demo
-						</span>
-						<span className='text-xs text-white font-bold'>
-							Paylabs Ecosystem
-						</span>
-					</div>
-				</div> */}
+			<div className='h-16 px-8 flex items-center justify-between border-b border-border-subtle bg-background'>
+				{/* Theme Toggle */}
+				<button
+					onClick={() => setIsDark(!isDark)}
+					className='p-2.5 rounded-xl bg-surface-2 border border-border-subtle text-text-muted hover:text-text-primary hover:bg-surface-3 transition-all duration-200'
+					title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+				>
+					{isDark ? <Sun size={16} /> : <Moon size={16} />}
+				</button>
 
 				<div className='flex bg-surface-2 p-1 rounded-xl border border-border-subtle'>
 					<button
@@ -47,12 +55,8 @@ export const OperationSimulatorPage: React.FC = () => {
 					</button>
 				</div>
 
-				{/* <div className='flex items-center gap-2'>
-					<div className='size-2 bg-primary rounded-full animate-pulse' />
-					<span className='text-[10px] text-zinc-500 uppercase font-bold tracking-widest'>
-						Active Demo
-					</span>
-				</div> */}
+				{/* Spacer to balance the layout */}
+				<div className='w-[36px]' />
 			</div>
 
 			{/* Main Content Area */}

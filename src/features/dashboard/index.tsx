@@ -43,6 +43,7 @@ export const DashboardPage: React.FC = () => {
 	const [filler, setFiller] = useState<FillerStatus | null>(null);
 	const [model, setModel] = useState<ModelStatus | null>(null);
 	const [fillerLoading, setFillerLoading] = useState(false);
+	const [stoppingFiller, setStoppingFiller] = useState(false);
 	const [counts, setCounts] = useState<DashboardCounts>({
 		total: 0,
 		flagged: 0,
@@ -99,40 +100,75 @@ export const DashboardPage: React.FC = () => {
 			.catch(() => {});
 	}, [page]);
 
-	// Auto-refresh when filler is running
+	// Always poll filler status to stay in sync (e.g. another user starts/stops it)
 	useEffect(() => {
-		if (filler?.is_running) {
-			pollRef.current = setInterval(() => {
-				fetchTransactions(page);
-				fetchCounts();
-				getFillerStatus()
-					.then(setFiller)
-					.catch(() => {});
-			}, 4000);
-		}
+		pollRef.current = setInterval(() => {
+			getFillerStatus()
+				.then((s) => {
+					setFiller((prev) => {
+						if (prev && !prev.is_running && s.is_running === prev.is_running)
+							return prev;
+						return s;
+					});
+					// Refresh transactions & counts when filler is running
+					if (s.is_running) {
+						getTransactions({
+							page,
+							page_size: 15,
+							sort_by: 'created_at',
+							sort_order: 'desc',
+						})
+							.then((data) => {
+								setTransactions(data.items);
+								setTotal(data.total);
+								setPages(data.pages);
+							})
+							.catch(() => {});
+						getDashboardCounts()
+							.then(setCounts)
+							.catch(() => {});
+					}
+				})
+				.catch(() => {});
+		}, 5000);
 		return () => {
 			if (pollRef.current) clearInterval(pollRef.current);
 		};
-	}, [filler?.is_running, page]);
+	}, [page]);
 
-	const handleToggleFiller = async () => {
+	const handleStartFiller = async () => {
 		setFillerLoading(true);
 		try {
-			if (filler?.is_running) {
-				const s = await stopFiller();
-				setFiller(s);
-			} else {
-				const s = await startFiller({
-					min_interval: 2,
-					max_interval: 5,
-					fraud_ratio: 0.08,
-				});
-				setFiller(s);
-			}
+			const s = await startFiller({
+				min_interval: 2,
+				max_interval: 5,
+				fraud_ratio: 0.08,
+			});
+			setFiller(s);
 		} catch (e) {
-			console.error('Filler toggle failed:', e);
+			console.error('Start filler failed:', e);
 		} finally {
 			setFillerLoading(false);
+		}
+	};
+
+	const handleStopFiller = async () => {
+		setStoppingFiller(true);
+		// Immediately clear polling to prevent stale state overwrites
+		if (pollRef.current) {
+			clearInterval(pollRef.current);
+			pollRef.current = null;
+		}
+		try {
+			const s = await stopFiller();
+			setFiller(s);
+			// Refresh data one final time after stopping
+			fetchTransactions(page);
+			fetchCounts();
+		} catch (e) {
+			console.error('Stop filler failed:', e);
+		} finally {
+			setStoppingFiller(false);
 		}
 	};
 
@@ -177,22 +213,28 @@ export const DashboardPage: React.FC = () => {
 				</div>
 
 				<button
-					onClick={handleToggleFiller}
-					disabled={fillerLoading}
-					className={`flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold border transition-all ${
-						filler?.is_running
-							? 'bg-danger-muted text-danger border-danger/30 hover:bg-danger-muted/80'
-							: 'bg-success-muted text-success border-success/30 hover:bg-success-muted/80'
-					} disabled:opacity-50`}
+					onClick={handleStartFiller}
+					disabled={fillerLoading || filler?.is_running}
+					className='flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold border transition-all bg-success-muted text-success border-success/30 hover:bg-success-muted/80 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer'
 				>
 					{fillerLoading ? (
 						<Loader2 size={14} className='animate-spin' />
-					) : filler?.is_running ? (
-						<Square size={14} />
 					) : (
 						<Play size={14} />
 					)}
-					{filler?.is_running ? 'Stop Data Fill' : 'Start Data Fill'}
+					Start Data Fill
+				</button>
+
+				<button
+					onClick={handleStopFiller}
+					className='flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold border transition-all bg-danger-muted text-danger border-danger/30 hover:bg-danger-muted/80 cursor-pointer'
+				>
+					{stoppingFiller ? (
+						<Loader2 size={14} className='animate-spin' />
+					) : (
+						<Square size={14} />
+					)}
+					{stoppingFiller ? 'Stopping...' : 'Stop Data Fill'}
 				</button>
 
 				{filler?.is_running && (

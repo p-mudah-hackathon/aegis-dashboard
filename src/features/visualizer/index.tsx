@@ -1,16 +1,12 @@
 import React, { useRef, useState, useEffect } from 'react';
 import ForceGraph2D from 'react-force-graph-2d';
-import {
-	LINK_TYPE_COLORS,
-	EMPTY_GRAPH,
-	buildGraphFromTransactions,
-} from './constants';
-import { getTransactions } from '../../api';
+import { LINK_TYPE_COLORS } from './constants';
 
 import { useContainerDimensions } from './hooks/useContainerDimensions';
 import { usePulseAnimation } from './hooks/usePulseAnimation';
 import { useNodePainter } from './hooks/useNodePainter';
 import { useGraphInteraction } from './hooks/useGraphInteraction';
+import { useLiveGraphData } from './hooks/useLiveGraphData';
 
 import { ZoomControls } from './components/ZoomControls';
 import { Legend } from './components/Legend';
@@ -20,33 +16,15 @@ import { NodeCard } from './components/NodeCard';
 import { EdgeTooltip } from './components/EdgeTooltip';
 import { Loader2 } from 'lucide-react';
 
-import type { GraphData } from './types';
 import { useNavigate } from 'react-router-dom';
 
 export const Visualizer: React.FC = () => {
 	const containerRef = useRef<HTMLDivElement>(null);
-	const [graphData, setGraphData] = useState<GraphData>(EMPTY_GRAPH);
-	const [loading, setLoading] = useState(true);
 	const [searchQuery, setSearchQuery] = useState('');
 	const navigate = useNavigate();
 
-	useEffect(() => {
-		(async () => {
-			try {
-				const data = await getTransactions({
-					page_size: 100,
-					sort_by: 'created_at',
-					sort_order: 'desc',
-				});
-				const graph = buildGraphFromTransactions(data.items);
-				setGraphData(graph);
-			} catch (e) {
-				console.error('Visualizer: failed to fetch transactions', e);
-			} finally {
-				setLoading(false);
-			}
-		})();
-	}, []);
+	const { graphData, loading, isLive, toggleLive, lastUpdated } =
+		useLiveGraphData();
 
 	const dimensions = useContainerDimensions(containerRef);
 	const pulsePhase = usePulseAnimation();
@@ -211,6 +189,7 @@ export const Visualizer: React.FC = () => {
 						onSearchChange={setSearchQuery}
 						onSelectNode={handleSearchSelect}
 					/>
+
 					<ZoomControls
 						onZoomIn={handleZoomIn}
 						onZoomOut={handleZoomOut}
@@ -221,6 +200,9 @@ export const Visualizer: React.FC = () => {
 						nodeCount={graphData.nodes.length}
 						edgeCount={graphData.links.length}
 						flaggedCount={flaggedCount}
+						isLive={isLive}
+						lastUpdated={lastUpdated}
+						onToggleLive={toggleLive}
 					/>
 				</>
 			)}

@@ -118,4 +118,43 @@ export function buildGraphFromTransactions(
 	};
 }
 
+/**
+ * Merges new graph data into existing graph data incrementally.
+ * Preserves existing node positions (x, y) from the d3 simulation.
+ */
+export function mergeGraphData(
+	existing: GraphData,
+	incoming: GraphData,
+): GraphData {
+	const existingNodeMap = new Map(existing.nodes.map((n) => [n.id, n]));
+	const existingLinkIds = new Set(existing.links.map((l) => l.id));
+
+	const mergedNodes = [...existing.nodes];
+	for (const node of incoming.nodes) {
+		const existingNode = existingNodeMap.get(node.id);
+		if (existingNode) {
+			// Update riskScore if incoming is higher
+			if (
+				node.riskScore !== undefined &&
+				(existingNode.riskScore ?? 0) < node.riskScore
+			) {
+				existingNode.riskScore = node.riskScore;
+				existingNode.color = node.color;
+				existingNode.val = node.val;
+			}
+		} else {
+			mergedNodes.push(node);
+		}
+	}
+
+	const mergedLinks = [...existing.links];
+	for (const link of incoming.links) {
+		if (!existingLinkIds.has(link.id)) {
+			mergedLinks.push(link);
+		}
+	}
+
+	return { nodes: mergedNodes, links: mergedLinks };
+}
+
 export const EMPTY_GRAPH: GraphData = { nodes: [], links: [] };

@@ -2,13 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import type { Log } from '../types';
 import {
 	Zap,
-	Play,
 	CreditCard,
 	Globe,
 	Activity,
 	Layers,
-	X,
 	ShieldAlert,
+	ChevronRight,
+	Terminal,
 } from 'lucide-react';
 
 interface Scenario {
@@ -24,13 +24,12 @@ interface Scenario {
 	logs: { type: Log['type']; message: string; details?: string }[];
 }
 
-const AttackResultModal: React.FC<{
-	isOpen: boolean;
-	onClose: () => void;
-	scenario: Scenario | null;
-	logs: Log[];
-	isSimulating: boolean;
-}> = ({ isOpen, onClose, scenario, logs, isSimulating }) => {
+export const AttackLogView: React.FC = () => {
+	const [logs, setLogs] = useState<Log[]>([]);
+	const [isSimulating, setIsSimulating] = useState(false);
+	const [selectedScenario, setSelectedScenario] = useState<Scenario | null>(
+		null,
+	);
 	const scrollRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
@@ -39,173 +38,61 @@ const AttackResultModal: React.FC<{
 		}
 	}, [logs]);
 
-	if (!isOpen || !scenario) return null;
-
-	const getLogStyle = (type: Log['type']) => {
-		switch (type) {
-			case 'attack':
-				return 'text-primary/80';
-			case 'blocked':
-				return 'text-danger font-bold';
-			case 'success':
-				return 'text-success font-bold';
-			default:
-				return 'text-zinc-500';
-		}
-	};
-
-	return (
-		<div className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300'>
-			<div className='bg-background border border-border-subtle w-full max-w-2xl rounded-3xl overflow-hidden shadow-2xl flex flex-col h-[600px]'>
-				{/* Modal Header */}
-				<div className='px-6 py-4 border-b border-border-subtle bg-surface-2 flex items-center justify-between'>
-					<div className='flex items-center gap-3'>
-						<div
-							className={`p-2 rounded-xl border bg-black ${scenario.borderColor} ${scenario.glowColor}`}
-						>
-							<scenario.icon size={20} className={`${scenario.color}`} />
-						</div>
-						<div>
-							<h3 className='text-white font-bold'>
-								{scenario.title} Analysis
-							</h3>
-							<p className='text-zinc-500 text-[10px] uppercase tracking-wider font-mono'>
-								Simulation ID:{' '}
-								{Math.random().toString(36).substring(7).toUpperCase()}
-							</p>
-						</div>
-					</div>
-					<button
-						onClick={onClose}
-						className='p-2 hover:bg-white/5 rounded-full transition-colors text-zinc-500 hover:text-white'
-					>
-						<X size={20} />
-					</button>
-				</div>
-
-				{/* Terminal Content */}
-				<div className='flex-1 overflow-hidden flex flex-col'>
-					<div
-						className='bg-black p-6 flex-1 overflow-y-auto font-mono text-[11px] space-y-2'
-						ref={scrollRef}
-					>
-						{logs.map((log) => (
-							<div
-								key={log.id}
-								className='animate-in slide-in-from-left-2 duration-200'
-							>
-								<div className='flex gap-4'>
-									<span className='text-zinc-800 shrink-0 font-bold'>
-										{log.timestamp}
-									</span>
-									<div className='flex flex-col gap-0.5 leading-relaxed'>
-										<div className={getLogStyle(log.type)}>
-											<span className='opacity-50 mr-2'>$</span>
-											{log.type === 'blocked' && '>> [CRITICAL_DETECTION] '}
-											{log.type === 'success' && '>> [PROBE_SUCCESS] '}
-											{log.message}
-										</div>
-										{log.details && (
-											<div className='text-zinc-600 opacity-70 ml-5 italic'>
-												{log.details}
-											</div>
-										)}
-									</div>
-								</div>
-							</div>
-						))}
-						{isSimulating && (
-							<div className='flex items-center gap-2 text-danger animate-pulse'>
-								<span className='opacity-50'>$</span>
-								<span>ANALYZING_BEHAVIORAL_NODES...</span>
-							</div>
-						)}
-					</div>
-				</div>
-
-				{/* AEGIS Analysis Footer */}
-				{!isSimulating && (
-					<div className='p-6 bg-surface-2 border-t border-border-subtle animate-in slide-in-from-bottom-4'>
-						<div className='flex items-start gap-4'>
-							<div className='p-3 bg-danger-muted rounded-2xl'>
-								<ShieldAlert className='text-danger' size={24} />
-							</div>
-							<div className='flex-1'>
-								<div className='flex items-center justify-between mb-2'>
-									<span className='text-[10px] text-danger font-bold uppercase tracking-widest bg-danger-muted px-2 py-0.5 rounded'>
-										AEGIS_INTERCEPTED
-									</span>
-									<span className='text-[10px] text-zinc-500 font-mono'>
-										Score: 0.99
-									</span>
-								</div>
-								<h4 className='text-white font-bold text-sm mb-1'>
-									Detection Logic:
-								</h4>
-								<p className='text-zinc-400 text-xs leading-relaxed'>
-									{scenario.reason}
-								</p>
-							</div>
-						</div>
-						<button
-							onClick={onClose}
-							className='w-full mt-6 py-3 bg-text-primary text-background font-bold rounded-xl hover:opacity-90 transition-opacity'
-						>
-							Dismiss Analysis
-						</button>
-					</div>
-				)}
-			</div>
-		</div>
-	);
-};
-
-export const AttackLogView: React.FC = () => {
-	const [logs, setLogs] = useState<Log[]>([]);
-	const [isSimulating, setIsSimulating] = useState(false);
-	const [selectedScenario, setSelectedScenario] = useState<Scenario | null>(
-		null,
-	);
-	const [showModal, setShowModal] = useState(false);
-
 	const scenarios: Scenario[] = [
 		{
 			id: 'velocity_attack',
 			icon: Zap,
 			title: 'Velocity Attack',
 			description:
-				'Compromised foreign e-wallet scans 10+ Paylabs dynamic QRIS codes across Bali and Jakarta in under 3 minutes before principal bank blocks it.',
+				'Compromised foreign e-wallet scans 10+ Paylabs dynamic QRIS codes across Bali and Jakarta in under 3 minutes.',
 			reason:
 				'Abnormal transaction density: 12 scans/180s from unique Geo-ID cluster.',
-			color: 'text-purple-400',
-			borderColor: 'border-purple-400/20',
+			color: 'text-purple',
+			borderColor: 'border-purple/20',
 			glowColor: 'shadow-[0_0_15px_-3px_rgba(168,85,247,0.2)]',
-			accent: 'bg-purple-500',
+			accent: 'bg-purple',
 			logs: [
-				{ type: 'system', message: 'SCAN_INIT: QRIS_DYNAMIC_PAYLABS_0821' },
-				{ type: 'system', message: 'SCAN_INIT: QRIS_DYNAMIC_PAYLABS_0822' },
+				{
+					type: 'system',
+					message: 'REQUEST_POST: /api/v1/payment/process',
+				},
+				{
+					type: 'system',
+					message:
+						'PAYLOAD: { type: "Velocity Attack", src_ip: "103.42.11.246" }',
+				},
 				{
 					type: 'attack',
-					message: 'THREAD_SPAWN: Multi-geo scanning session active',
-					details: 'Loc: [Jakarta, Bali, Surabaya]',
+					message: 'Executing adversarial vector: Velocity Attack...',
+					details: 'AgentID: A5-7429 (Kali-Linux-Container)',
 				},
-				{ type: 'system', message: 'SCAN_INIT: QRIS_DYNAMIC_PAYLABS_0823' },
+				{
+					type: 'system',
+					message: 'SCAN_INIT: QRIS_DYNAMIC_PAYLABS_0821',
+				},
+				{
+					type: 'system',
+					message: 'SCAN_INIT: QRIS_DYNAMIC_PAYLABS_0822',
+				},
 			],
 		},
 		{
 			id: 'card_testing',
-			icon: Activity,
-			title: 'Wallet Probing',
+			icon: CreditCard,
+			title: 'Card Testing',
 			description:
-				'Bot probes with tiny QRIS scans (Rp 10K) to verify inbound tourist wallet status and exchange rate, then executes a massive Rp 5M+ cash-out.',
+				'Bot probes with tiny QRIS scans (Rp 10K) to verify inbound tourist wallet status.',
 			reason:
 				'Probing behavior detected: Micropayment verification followed by high-value outlier.',
-			color: 'text-cyan-400',
-			borderColor: 'border-cyan-400/20',
+			color: 'text-cyan',
+			borderColor: 'border-cyan/20',
 			glowColor: 'shadow-[0_0_15px_-3px_rgba(34,211,238,0.2)]',
-			accent: 'bg-cyan-500',
+			accent: 'bg-cyan',
 			logs: [
-				{ type: 'system', message: 'TXN_REQ: IDR 10,000.00 (Status Check)' },
+				{
+					type: 'system',
+					message: 'TXN_REQ: IDR 10,000.00 (Status Check)',
+				},
 				{ type: 'success', message: 'PROBE_COMPLETE: Wallet Active' },
 				{
 					type: 'attack',
@@ -219,16 +106,22 @@ export const AttackLogView: React.FC = () => {
 			icon: Layers,
 			title: 'Collusion Ring',
 			description:
-				'3–5 synthetic foreign accounts sharing the same VPN IP subnet simultaneously routing high-value QRIS payments to a single Paylabs F&B merchant.',
+				'3–5 synthetic foreign accounts sharing the same VPN IP subnet simultaneously routing high-value QRIS payments.',
 			reason:
 				'Sybil cluster detected: 5 accounts mapped to 103.42.11.x subnet routing to Merchant_ID_442.',
-			color: 'text-pink-400',
-			borderColor: 'border-pink-400/20',
+			color: 'text-pink',
+			borderColor: 'border-pink/20',
 			glowColor: 'shadow-[0_0_15px_-3px_rgba(244,114,182,0.2)]',
-			accent: 'bg-pink-500',
+			accent: 'bg-pink',
 			logs: [
-				{ type: 'system', message: 'INBOUND_CONN: 103.42.11.4 [VPN_DETECTED]' },
-				{ type: 'system', message: 'INBOUND_CONN: 103.42.11.8 [VPN_DETECTED]' },
+				{
+					type: 'system',
+					message: 'INBOUND_CONN: 103.42.11.4 [VPN_DETECTED]',
+				},
+				{
+					type: 'system',
+					message: 'INBOUND_CONN: 103.42.11.8 [VPN_DETECTED]',
+				},
 				{
 					type: 'attack',
 					message: 'RING_SYNC: Synchronized high-value deposit',
@@ -241,7 +134,7 @@ export const AttackLogView: React.FC = () => {
 			icon: Globe,
 			title: 'Geo Anomaly',
 			description:
-				'Same Alipay/WeChat account scans QRIS in Jakarta and Bali 10 minutes apart. Indicates Account Takeover or illicit sharing of static QR screenshots.',
+				'Same Alipay/WeChat account scans QRIS in Jakarta and Bali 10 minutes apart.',
 			reason:
 				'Impossible travel: Speed 600km/h detected between nodes. Flagged as Account Takeover.',
 			color: 'text-warning',
@@ -255,15 +148,18 @@ export const AttackLogView: React.FC = () => {
 					message: 'TOKEN_REUSE: Session pulse detected in Bali',
 					details: 'Delta: 600 seconds',
 				},
-				{ type: 'system', message: 'VALIDATING_GPS_FENCE: Hardware mismatch' },
+				{
+					type: 'system',
+					message: 'VALIDATING_GPS_FENCE: Hardware mismatch',
+				},
 			],
 		},
 		{
 			id: 'amount_anomaly',
-			icon: CreditCard,
+			icon: Activity,
 			title: 'Amount Anomaly',
 			description:
-				'Rp 5M+ cross-border QRIS settlement at 3 AM on a small merchant that normally processes Rp 50K daily average. Off-hours money laundering.',
+				'Rp 5M+ cross-border QRIS settlement at 3 AM on a small merchant that normally processes Rp 50K daily average.',
 			reason:
 				'Off-hours anomaly: High-value settlement outside operating window for SmallBusiness_Tier.',
 			color: 'text-danger',
@@ -271,8 +167,14 @@ export const AttackLogView: React.FC = () => {
 			glowColor: 'shadow-[0_0_15px_rgba(239,68,68,0.15)]',
 			accent: 'bg-danger',
 			logs: [
-				{ type: 'system', message: 'SETTLEMENT_REQ: IDR 5,200,000.00' },
-				{ type: 'system', message: 'TIME_SCAN: 03:14:22 [OFF_HOURS]' },
+				{
+					type: 'system',
+					message: 'SETTLEMENT_REQ: IDR 5,200,000.00',
+				},
+				{
+					type: 'system',
+					message: 'TIME_SCAN: 03:14:22 [OFF_HOURS]',
+				},
 				{
 					type: 'attack',
 					message: 'PEER_P2P_EXPLOIT: Unusual merchant volume',
@@ -296,12 +198,14 @@ export const AttackLogView: React.FC = () => {
 	const runScenario = (scenario: Scenario) => {
 		if (isSimulating) return;
 		setSelectedScenario(scenario);
-		setShowModal(true);
 		setIsSimulating(true);
 		setLogs([]);
 
-		addLog('system', `BOOT_SEQUENCE: ADVERSARY_ENV_V2.0`);
-		addLog('system', `TARGET_GATEWAY: paylabs.api.production`);
+		addLog('system', `REQUEST_POST: /api/v1/payment/process`);
+		addLog(
+			'system',
+			`PAYLOAD: { type: "${scenario.title}", src_ip: "103.42.11.246" }`,
+		);
 
 		let delay = 600;
 		scenario.logs.forEach((l) => {
@@ -314,84 +218,171 @@ export const AttackLogView: React.FC = () => {
 		setTimeout(() => {
 			addLog(
 				'blocked',
-				`AEGIS_BLOCK: ${scenario.title.toUpperCase()}`,
-				`Logic: ${scenario.reason}`,
+				`AEGIS_EVENT: HIGH_RISK_DETECTED`,
+				`Logic: ${scenario.reason} Risk Score: 0.99`,
 			);
-			addLog(
-				'system',
-				`GATEWAY_SIGNAL: TERMINATED`,
-				`Risk Score: 0.99 [CRITICAL]`,
-			);
+			addLog('system', `GATEWAY_RESPONSE: TRANSACTION_SHIELDED`);
+			addLog('system', `Action: TERMINATED`);
 			setIsSimulating(false);
 		}, delay + 400);
 	};
 
+	const getLogStyle = (type: Log['type']) => {
+		switch (type) {
+			case 'attack':
+				return 'text-success';
+			case 'blocked':
+				return 'text-danger font-bold';
+			case 'success':
+				return 'text-success font-bold';
+			default:
+				return 'text-text-secondary';
+		}
+	};
+
+	const getLogPrefix = (type: Log['type']) => {
+		switch (type) {
+			case 'attack':
+				return '⚡ ';
+			case 'blocked':
+				return '⚠ AEGIS_EVENT: ';
+			default:
+				return '';
+		}
+	};
+
 	return (
 		<div className='animate-in fade-in duration-700'>
-			<div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-				{scenarios.map((s) => (
-					<button
-						key={s.id}
-						disabled={isSimulating}
-						onClick={() => runScenario(s)}
-						className={`group relative p-8 bg-surface-2 border border-border-subtle rounded-3xl text-left transition-all duration-500 overflow-hidden ${
-							isSimulating
-								? 'opacity-50 cursor-not-allowed'
-								: 'hover:border-primary/30 hover:bg-surface-3 hover:-translate-y-1 hover:shadow-2xl'
-						}`}
-					>
-						<div className='absolute inset-0 pointer-events-none bg-linear-to-t from-danger/5 to-transparent opacity-20' />
-						<div
-							className={`absolute inset-0 opacity-0 group-hover:opacity-[0.05] transition-opacity duration-700 rounded-3xl ${s.accent} blur-2xl`}
-						/>
-
-						<div className='relative z-10'>
-							<div className='flex items-center justify-between mb-6'>
-								<div
-									className={`p-3 rounded-2xl border bg-background transition-all duration-500 group-hover:scale-110 group-hover:bg-surface-3 ${s.borderColor} ${s.glowColor} group-hover:border-opacity-100 group-hover:shadow-[0_0_20px_0px_rgba(255,255,255,0.05)]`}
-								>
-									<s.icon
-										size={24}
-										className={`${s.color} transition-all duration-500 group-hover:brightness-125 group-hover:stroke-[2.5px]`}
-									/>
-								</div>
-								<div className='flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity'>
-									<span className='text-[10px] text-text-muted font-bold uppercase'>
-										Simulate
-									</span>
-									<Play size={10} className='text-text-muted' />
-								</div>
+			<div className='flex gap-6 items-start'>
+				<div className='flex-1 min-w-0'>
+					<div className='bg-surface-1 border border-border-subtle rounded-2xl overflow-hidden shadow-xl'>
+						<div className='px-5 py-3 border-b border-border-subtle bg-surface-2 flex items-center justify-between'>
+							<div className='flex items-center gap-3'>
+								<Terminal size={14} className='text-text-muted' />
+								<span className='text-[11px] font-mono text-text-muted uppercase tracking-widest'>
+									PAYLOAD.ATTACKER.SHELL
+								</span>
 							</div>
+							<div className='flex gap-1.5'>
+								<div className='size-3 rounded-full bg-success' />
+								<div className='size-3 rounded-full bg-warning' />
+								<div className='size-3 rounded-full bg-danger' />
+							</div>
+						</div>
 
-							<h3 className='text-text-primary font-bold text-lg mb-3'>
-								{s.title}
-							</h3>
-							<p className='text-text-muted text-xs leading-relaxed line-clamp-3'>
-								{s.description}
-							</p>
+						<div
+							className='bg-surface-deep p-6 min-h-[360px] max-h-[420px] overflow-y-auto font-mono text-[11px] space-y-1.5 custom-scrollbar'
+							ref={scrollRef}
+						>
+							{logs.length === 0 && !isSimulating && (
+								<div className='text-text-muted/30 flex items-center gap-2'>
+									<span className='animate-pulse'>▊</span>
+									<span>Select an attack vector to begin simulation...</span>
+								</div>
+							)}
+							{logs.map((log) => (
+								<div
+									key={log.id}
+									className='animate-in slide-in-from-left-2 duration-200'
+								>
+									<div className='flex gap-3'>
+										<span className='text-text-muted/50 shrink-0'>
+											[{log.timestamp}]
+										</span>
+										<div className='flex flex-col gap-0.5 leading-relaxed'>
+											<div className={getLogStyle(log.type)}>
+												{getLogPrefix(log.type)}
+												{log.type === 'blocked'
+													? log.message.replace('AEGIS_EVENT: ', '')
+													: log.message}
+											</div>
+											{log.details && (
+												<div className='text-text-muted/60 ml-6 text-[10px]'>
+													↳ {log.details}
+												</div>
+											)}
+										</div>
+									</div>
+								</div>
+							))}
+							{isSimulating && (
+								<div className='flex items-center gap-2 text-success animate-pulse mt-2'>
+									<span>▊</span>
+									<span>Executing adversarial vector...</span>
+								</div>
+							)}
 						</div>
-						<div className='absolute -right-8 -bottom-8 opacity-[0.03] group-hover:opacity-[0.12] transition-all duration-700 pointer-events-none'>
-							<s.icon
-								size={160}
-								className={`${s.color} transition-all duration-700 group-hover:scale-110`}
-								style={{
-									filter: isSimulating
-										? 'none'
-										: `drop-shadow(0 0 12px currentColor)`,
-								}}
-							/>
+					</div>
+				</div>
+
+				<div className='w-[340px] shrink-0 flex flex-col gap-4'>
+					<div className='bg-surface-1 border border-border-subtle rounded-2xl overflow-hidden shadow-xl'>
+						<div className='px-6 py-5 flex items-start gap-4'>
+							<div className='p-3 bg-danger-muted rounded-2xl'>
+								<ShieldAlert className='text-danger' size={28} />
+							</div>
+							<div>
+								<h2 className='text-lg font-bold text-text-primary'>
+									Attack Vector
+								</h2>
+								<p className='text-text-muted text-xs mt-0.5'>
+									Select fraud type
+								</p>
+							</div>
 						</div>
-					</button>
-				))}
+
+						<div className='px-3 pb-3'>
+							{scenarios.map((s) => {
+								const isActive = selectedScenario?.id === s.id;
+								return (
+									<button
+										key={s.id}
+										disabled={isSimulating}
+										onClick={() => runScenario(s)}
+										className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 group ${
+											isActive
+												? 'bg-surface-3 border border-border-medium'
+												: 'hover:bg-surface-2 border border-transparent'
+										} ${
+											isSimulating && !isActive
+												? 'opacity-40 cursor-not-allowed'
+												: ''
+										}`}
+									>
+										<div
+											className={`p-2 rounded-xl transition-all duration-200 ${
+												isActive
+													? 'bg-surface-4'
+													: 'bg-surface-2 group-hover:bg-surface-3'
+											}`}
+										>
+											<s.icon
+												size={16}
+												className={`${s.color} transition-all duration-200`}
+											/>
+										</div>
+										<span
+											className={`flex-1 text-xs font-bold uppercase tracking-wider ${
+												isActive ? 'text-text-primary' : 'text-text-secondary'
+											}`}
+										>
+											{s.title}
+										</span>
+										<ChevronRight
+											size={14}
+											className={`text-text-muted/40 transition-all duration-200 ${
+												isActive
+													? 'text-text-muted opacity-100'
+													: 'opacity-0 group-hover:opacity-100'
+											}`}
+										/>
+									</button>
+								);
+							})}
+						</div>
+					</div>
+				</div>
 			</div>
-
-			<AttackResultModal
-				isOpen={showModal}
-				onClose={() => setShowModal(false)}
-				scenario={selectedScenario}
-				logs={logs}
-				isSimulating={isSimulating}
-			/>
 		</div>
 	);
 };
