@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import type { Log } from '../types';
 import {
 	Zap,
@@ -9,7 +9,14 @@ import {
 	ShieldAlert,
 	ChevronRight,
 	Terminal,
+	Play,
+	Square,
+	ShieldX,
+	Loader2,
+	Clock,
+	Hash,
 } from 'lucide-react';
+import * as api from '../../../api';
 
 interface Scenario {
 	id: string;
@@ -24,6 +31,61 @@ interface Scenario {
 	logs: { type: Log['type']; message: string; details?: string }[];
 }
 
+interface SimLogEntry {
+	id: number;
+	level: string;
+	text: string;
+	time: Date;
+}
+
+const FRAUD_PRESETS = [
+	{
+		label: 'Light',
+		pct: '5%',
+		value: 0.05,
+		color: 'text-success',
+		bg: 'bg-success-muted border-success/20',
+	},
+	{
+		label: 'Moderate',
+		pct: '15%',
+		value: 0.15,
+		color: 'text-warning',
+		bg: 'bg-warning-muted border-warning/20',
+	},
+	{
+		label: 'Heavy',
+		pct: '30%',
+		value: 0.3,
+		color: 'text-danger',
+		bg: 'bg-danger-muted border-danger/20',
+	},
+	{
+		label: 'Extreme',
+		pct: '50%',
+		value: 0.5,
+		color: 'text-danger',
+		bg: 'bg-danger-muted border-danger/20',
+	},
+];
+
+const getFraudTypeStyle = (type: string) => {
+	switch (type.toLowerCase()) {
+		case 'velocity_attack':
+			return 'bg-purple-muted text-purple';
+		case 'card_testing':
+			return 'bg-cyan-muted text-cyan';
+		case 'collusion_ring':
+			return 'bg-pink-muted text-pink';
+		case 'geo_anomaly':
+			return 'bg-warning-muted text-warning';
+		case 'amount_anomaly':
+			return 'bg-danger-muted text-danger';
+		default:
+			return 'bg-surface-3 text-text-muted';
+	}
+};
+
 export const AttackLogView: React.FC = () => {
 	const [logs, setLogs] = useState<Log[]>([]);
 	const [isSimulating, setIsSimulating] = useState(false);
@@ -32,11 +94,110 @@ export const AttackLogView: React.FC = () => {
 	);
 	const scrollRef = useRef<HTMLDivElement>(null);
 
+	// ── Attack Simulator State ───────────────────────────────────────
+	const [total, setTotal] = useState(200);
+	const [fraudPct, setFraudPct] = useState(0.15);
+	const [speed, setSpeed] = useState<'slow' | 'normal' | 'fast'>('fast');
+	const [atkRunning, setAtkRunning] = useState(false);
+	const [atkProgress, setAtkProgress] = useState(0);
+	const [atkElapsed, setAtkElapsed] = useState(0);
+	const [simLogs, setSimLogs] = useState<SimLogEntry[]>([]);
+	const [recentTxns, setRecentTxns] = useState<any[]>([]);
+	const [atkStats, setAtkStats] = useState<any>(null);
+
+	const wsRef = useRef<WebSocket | null>(null);
+	const simLogIdRef = useRef(0);
+	const simLogsEndRef = useRef<HTMLDivElement>(null);
+	const timerRef = useRef<number | null>(null);
+
 	useEffect(() => {
 		if (scrollRef.current) {
 			scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
 		}
 	}, [logs]);
+
+	useEffect(() => {
+		simLogsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+	}, [simLogs]);
+
+	useEffect(() => {
+		if (atkRunning) {
+			const start = Date.now();
+			timerRef.current = window.setInterval(
+				() => setAtkElapsed(Math.floor((Date.now() - start) / 1000)),
+				1000,
+			);
+		} else if (timerRef.current) {
+			clearInterval(timerRef.current);
+		}
+		return () => {
+			if (timerRef.current) clearInterval(timerRef.current);
+		};
+	}, [atkRunning]);
+
+	const addSimLog = useCallback((level: string, text: string) => {
+		setSimLogs((prev) => [
+			...prev.slice(-300),
+			{ id: simLogIdRef.current++, level, text, time: new Date() },
+		]);
+	}, []);
+
+	const handleAtkStart = useCallback(() => {
+		const ws = new WebSocket(api.getAttackWsUrl());
+		wsRef.current = ws;
+		ws.onopen = () => {
+			setAtkRunning(true);
+			setAtkProgress(0);
+			setSimLogs([]);
+			setRecentTxns([]);
+			setAtkElapsed(0);
+			setAtkStats(null);
+			addSimLog(
+				'info',
+				`⚔ Launching attack: ${total} transactions, ${(fraudPct * 100).toFixed(0)}% fraud, ${speed} speed`,
+			);
+			ws.send(JSON.stringify({ total, fraud_pct: fraudPct, speed }));
+		};
+		ws.onmessage = (ev) => {
+			const event: api.AttackEvent = JSON.parse(ev.data);
+			if (event.type === 'transaction') {
+				setRecentTxns((prev) => [event.data, ...prev.slice(0, 99)]);
+				setAtkProgress((prev) => prev + 1);
+			} else if (event.type === 'stats_update') {
+				setAtkStats(event.data);
+			} else if (event.type === 'attack_start') {
+				addSimLog(
+					'info',
+					`Simulation started: ${event.data.total} total, ${event.data.fraud} adversarial`,
+				);
+			} else if (event.type === 'attack_end') {
+				setAtkStats(event.data);
+				setAtkProgress(total);
+				setAtkRunning(false);
+				addSimLog(
+					'info',
+					`✅ Complete — F1: ${(event.data.f1 * 100).toFixed(1)}% | Recall: ${(event.data.recall * 100).toFixed(1)}% | ROI: IDR ${event.data.roi_saved?.toLocaleString('id-ID') ?? 0}`,
+				);
+				ws.close();
+			} else if (event.type === 'log') {
+				addSimLog(event.level || 'info', event.text || '');
+			}
+		};
+		ws.onerror = () => {
+			addSimLog('error', 'WebSocket error — is the API running?');
+			setAtkRunning(false);
+		};
+		ws.onclose = () => setAtkRunning(false);
+	}, [total, fraudPct, speed, addSimLog]);
+
+	const handleAtkStop = useCallback(() => {
+		wsRef.current?.close();
+		wsRef.current = null;
+		setAtkRunning(false);
+		addSimLog('warn', 'Stopped by user');
+	}, [addSimLog]);
+
+	const pctDone = total > 0 ? Math.min(100, (atkProgress / total) * 100) : 0;
 
 	const scenarios: Scenario[] = [
 		{
@@ -252,7 +413,8 @@ export const AttackLogView: React.FC = () => {
 	};
 
 	return (
-		<div className='animate-in fade-in duration-700'>
+		<div className='animate-in fade-in duration-700 space-y-6'>
+			{/* ── Existing: Scenario Terminal + Attack Vector ── */}
 			<div className='flex gap-6 items-start'>
 				<div className='flex-1 min-w-0'>
 					<div className='bg-surface-1 border border-border-subtle rounded-2xl overflow-hidden shadow-xl'>
@@ -379,6 +541,276 @@ export const AttackLogView: React.FC = () => {
 									</button>
 								);
 							})}
+						</div>
+					</div>
+				</div>
+			</div>
+
+			{/* ── NEW: HTGNN Attack Simulator ── */}
+			<div className='bg-surface-1 border border-border-subtle rounded-2xl overflow-hidden shadow-xl'>
+				<div className='px-6 py-4 border-b border-border-subtle bg-surface-2 flex items-center gap-3'>
+					<div className='size-8 rounded-xl bg-danger-muted border border-danger/30 flex items-center justify-center'>
+						<Zap size={16} className='text-danger' />
+					</div>
+					<div>
+						<h2 className='text-sm font-bold text-text-primary'>
+							HTGNN Attack Simulator
+						</h2>
+						<p className='text-[11px] text-text-muted'>
+							Test model resilience with adversarial QRIS fraud patterns
+						</p>
+					</div>
+					{atkRunning && (
+						<div className='ml-auto flex items-center gap-2'>
+							<Loader2 size={14} className='animate-spin text-danger' />
+							<span className='text-[11px] text-danger font-medium'>
+								Running...
+							</span>
+						</div>
+					)}
+				</div>
+
+				<div className='p-6'>
+					<div className='grid grid-cols-12 gap-6'>
+						{/* ── Configuration Panel ── */}
+						<div className='col-span-3 bg-surface-2 border border-border-subtle rounded-2xl p-5 space-y-5'>
+							<h3 className='text-text-primary font-bold text-sm flex items-center gap-2'>
+								<Zap size={14} className='text-danger' />
+								Configuration
+							</h3>
+							<div>
+								<label className='text-[10px] text-text-muted uppercase tracking-wider mb-2 block'>
+									Transactions
+								</label>
+								<input
+									type='range'
+									min={50}
+									max={2000}
+									step={50}
+									value={total}
+									onChange={(e) => setTotal(Number(e.target.value))}
+									disabled={atkRunning}
+									className='w-full accent-red-500'
+								/>
+								<p className='text-center text-danger font-bold text-lg mt-1'>
+									{total}
+								</p>
+							</div>
+							<div>
+								<label className='text-[10px] text-text-muted uppercase tracking-wider mb-2 block'>
+									Fraud Ratio
+								</label>
+								<div className='grid grid-cols-2 gap-1.5'>
+									{FRAUD_PRESETS.map((p) => (
+										<button
+											key={p.value}
+											onClick={() => setFraudPct(p.value)}
+											disabled={atkRunning}
+											className={`px-2 py-2 rounded-lg text-[11px] font-medium transition-all border ${fraudPct === p.value ? `${p.bg} ${p.color}` : 'bg-surface-3 text-text-muted border-border-subtle hover:bg-surface-elevated'}`}
+										>
+											{p.label}
+											<br />
+											<span className='font-bold'>{p.pct}</span>
+										</button>
+									))}
+								</div>
+							</div>
+							<div>
+								<label className='text-[10px] text-text-muted uppercase tracking-wider mb-2 block'>
+									Speed
+								</label>
+								<div className='flex gap-1.5'>
+									{(['slow', 'normal', 'fast'] as const).map((s) => (
+										<button
+											key={s}
+											onClick={() => setSpeed(s)}
+											disabled={atkRunning}
+											className={`flex-1 py-2 rounded-lg text-[11px] font-medium transition-all ${speed === s ? 'bg-primary-muted text-primary border border-primary/30' : 'bg-surface-3 text-text-muted border border-border-subtle'}`}
+										>
+											{s.charAt(0).toUpperCase() + s.slice(1)}
+										</button>
+									))}
+								</div>
+							</div>
+							<button
+								onClick={atkRunning ? handleAtkStop : handleAtkStart}
+								className={`w-full py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all ${
+									atkRunning
+										? 'bg-danger-muted text-danger border border-danger/30 hover:bg-danger/20'
+										: 'bg-linear-to-r from-danger to-primary text-white hover:shadow-lg hover:shadow-danger/20'
+								}`}
+							>
+								{atkRunning ? (
+									<>
+										<Square size={14} /> Stop
+									</>
+								) : (
+									<>
+										<Play size={14} /> Launch Attack
+									</>
+								)}
+							</button>
+							{(atkRunning || atkProgress > 0) && (
+								<div>
+									<div className='flex justify-between text-[10px] text-text-muted mb-1'>
+										<span>
+											{atkProgress}/{total}
+										</span>
+										<span>{pctDone.toFixed(0)}%</span>
+									</div>
+									<div className='h-1.5 bg-surface-3 rounded-full overflow-hidden'>
+										<div
+											className='h-full bg-linear-to-r from-danger to-primary rounded-full transition-all'
+											style={{ width: `${pctDone}%` }}
+										/>
+									</div>
+									{atkRunning && (
+										<p className='text-[10px] text-text-muted mt-1 text-center'>
+											<Clock size={10} className='inline mr-1' />
+											{atkElapsed}s elapsed
+										</p>
+									)}
+								</div>
+							)}
+						</div>
+
+						{/* ── Middle: Live Transaction Feed ── */}
+						<div className='col-span-4 bg-surface-2 border border-border-subtle rounded-2xl p-5'>
+							<h3 className='text-sm font-bold text-text-secondary mb-3 flex items-center gap-2'>
+								<ShieldX size={14} className='text-danger' />
+								Live Transaction Feed
+								{atkRunning && (
+									<span className='ml-auto size-2 rounded-full bg-danger animate-pulse' />
+								)}
+							</h3>
+							<div className='space-y-1 max-h-[500px] overflow-y-auto custom-scrollbar'>
+								{recentTxns.length === 0 ? (
+									<p className='text-text-muted text-xs text-center py-6'>
+										Waiting for transactions...
+									</p>
+								) : (
+									recentTxns.slice(0, 30).map((txn: any, i: number) => (
+										<div
+											key={i}
+											className='flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-surface-1 text-[11px]'
+										>
+											<span
+												className={`font-mono ${txn.is_fraud ? 'text-danger' : 'text-text-muted'}`}
+											>
+												{txn.txn_id}
+											</span>
+											<span className='text-text-muted truncate max-w-[80px]'>
+												{txn.merchant}
+											</span>
+											<span className='text-text-secondary ml-auto'>
+												{((txn.risk_score ?? 0) * 100).toFixed(0)}%
+											</span>
+											{txn.is_flagged ? (
+												<span className='px-1 py-0.5 rounded text-[8px] bg-danger-muted text-danger font-bold'>
+													FLAG
+												</span>
+											) : (
+												<span className='px-1 py-0.5 rounded text-[8px] bg-success-muted text-success'>
+													OK
+												</span>
+											)}
+											{txn.fraud_type && (
+												<span
+													className={`px-1 py-0.5 rounded text-[8px] font-bold ${getFraudTypeStyle(txn.fraud_type)}`}
+												>
+													{txn.fraud_type.replace(/_/g, ' ')}
+												</span>
+											)}
+										</div>
+									))
+								)}
+							</div>
+						</div>
+
+						{/* ── Right: Detection by Fraud Type + Simulation Log ── */}
+						<div className='col-span-5 flex flex-col gap-5'>
+							{/* Detection by Fraud Type */}
+							<div className='bg-surface-2 border border-border-subtle rounded-2xl p-5'>
+								<h3 className='text-sm font-bold text-text-secondary mb-4 flex items-center gap-2'>
+									<Hash size={14} className='text-purple' />
+									Detection by Fraud Type
+								</h3>
+								{atkStats?.per_type &&
+								Object.keys(atkStats.per_type).length > 0 ? (
+									<div className='space-y-3'>
+										{Object.entries(
+											atkStats.per_type_total ?? atkStats.per_type,
+										).map(([type, totalCount]: [string, any]) => {
+											const detected = atkStats.per_type?.[type] ?? 0;
+											const rate =
+												totalCount > 0 ? (detected / totalCount) * 100 : 0;
+											return (
+												<div key={type}>
+													<div className='flex justify-between text-[11px] mb-1'>
+														<span className='text-text-secondary capitalize'>
+															{type.replace(/_/g, ' ')}
+														</span>
+														<span className='text-text-muted'>
+															{detected}/{totalCount as number} caught (
+															{rate.toFixed(0)}%)
+														</span>
+													</div>
+													<div className='h-2 bg-surface-3 rounded-full overflow-hidden'>
+														<div
+															className='h-full bg-linear-to-r from-purple to-pink rounded-full transition-all'
+															style={{ width: `${rate}%` }}
+														/>
+													</div>
+												</div>
+											);
+										})}
+									</div>
+								) : (
+									<div className='text-text-muted text-xs text-center py-8'>
+										{atkRunning
+											? 'Collecting data...'
+											: 'Launch an attack to see per-type breakdown'}
+									</div>
+								)}
+							</div>
+
+							{/* Simulation Log */}
+							<div className='bg-surface-2 border border-border-subtle rounded-2xl p-5 flex-1'>
+								<h3 className='text-sm font-bold text-text-secondary mb-3'>
+									Simulation Log
+								</h3>
+								<div className='space-y-0.5 max-h-48 overflow-y-auto font-mono text-[10px] custom-scrollbar'>
+									{simLogs.length === 0 ? (
+										<p className='text-text-muted text-xs text-center py-6 font-sans'>
+											Ready
+										</p>
+									) : (
+										simLogs.map((log) => (
+											<div key={log.id} className='flex gap-2'>
+												<span className='text-text-muted shrink-0'>
+													{log.time.toLocaleTimeString('id-ID', {
+														hour: '2-digit',
+														minute: '2-digit',
+														second: '2-digit',
+													})}
+												</span>
+												<span
+													className={
+														log.level === 'error'
+															? 'text-danger'
+															: log.level === 'warn'
+																? 'text-warning'
+																: 'text-text-muted'
+													}
+												>
+													{log.text}
+												</span>
+											</div>
+										))
+									)}
+									<div ref={simLogsEndRef} />
+								</div>
+							</div>
 						</div>
 					</div>
 				</div>

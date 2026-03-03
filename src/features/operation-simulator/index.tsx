@@ -5,9 +5,7 @@ import { AttackLogView } from './components/AttackLogView';
 
 export const OperationSimulatorPage: React.FC = () => {
 	const [currentView, setCurrentView] = useState<'user' | 'attacker'>('user');
-	const [isDark, setIsDark] = useState(() =>
-		document.documentElement.classList.contains('dark'),
-	);
+	const [isDark, setIsDark] = useState(true);
 
 	useEffect(() => {
 		if (isDark) {
@@ -19,9 +17,7 @@ export const OperationSimulatorPage: React.FC = () => {
 
 	return (
 		<div className='flex-1 flex flex-col h-full bg-background overflow-hidden'>
-			{/* Clean Header with Subtle Role Switcher */}
 			<div className='h-16 px-8 flex items-center justify-between border-b border-border-subtle bg-background'>
-				{/* Theme Toggle */}
 				<button
 					onClick={() => setIsDark(!isDark)}
 					className='p-2.5 rounded-xl bg-surface-2 border border-border-subtle text-text-muted hover:text-text-primary hover:bg-surface-3 transition-all duration-200'
